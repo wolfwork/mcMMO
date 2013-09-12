@@ -346,6 +346,12 @@ Skills:
 
             # Range to check for nearby pets when using Call Of The Wild, 0 will disable the check
             Range: 40.0
+
+            # Summon life length determines how long a summoned pet lives
+            Wolf_Length: 240
+            Ocelot_Length: 240
+            Horse_Length: 240
+
     Unarmed:
         Enabled_For_PVP: true
         Enabled_For_PVE: true
@@ -448,6 +454,7 @@ Particles:
     Dodge: true
     Bleed: true
     Greater_Impact: true
+    Call_of_the_Wild: true
 
     # These settings determine if fireworks should get launched when a player levels-up,
     # this will happen by default for every 100 levels.
