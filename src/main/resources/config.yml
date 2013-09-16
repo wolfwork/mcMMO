@@ -352,6 +352,11 @@ Skills:
             Ocelot_Length: 240
             Horse_Length: 240
 
+            # Maximum allowed pets at the same time
+            Wolf_MaxAmount: 10
+            Ocelot_MaxAmount: 10
+            Horse_MaxAmount: 10
+
     Unarmed:
         Enabled_For_PVP: true
         Enabled_For_PVE: true
