@@ -246,12 +246,9 @@ public class PlayerProfile {
      * @return xp Experience amount registered
      */
     public float getRegisteredXpGain(SkillType skillType) {
-        float xp;
+        float xp = 0F;
 
-        if (rollingSkillsXp.get(skillType) == null) {
-            xp = 0F;
-        }
-        else {
+        if (rollingSkillsXp.get(skillType) != null) {
             xp = rollingSkillsXp.get(skillType);
         }
 
