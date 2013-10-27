@@ -52,7 +52,7 @@ public class SelfListener implements Listener {
 
         final float rawXp = event.getRawXpGained();
         if (rawXp < 0) {
-            return; // Don't calculate for XP subtraction
+            return; // Don't calculate for XP subtraction : this event shouldn't be called if it's subtracting XP right?
         }
 
         Player player = event.getPlayer();
