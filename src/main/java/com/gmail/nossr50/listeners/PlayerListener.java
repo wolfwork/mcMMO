@@ -28,6 +28,7 @@ import org.bukkit.event.player.PlayerStatisticIncrementEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
+import com.gmail.nossr50.datatypes.skills.ToolType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.chat.ChatManager;
 import com.gmail.nossr50.chat.ChatManagerFactory;
@@ -534,10 +535,10 @@ public class PlayerListener implements Listener {
 
         McMMOPlayer mcMMOPlayer = UserManager.getPlayer(player);
         ItemStack heldItem = player.getItemInHand();
+        Block block = event.getClickedBlock();
 
         switch (event.getAction()) {
             case RIGHT_CLICK_BLOCK:
-                Block block = event.getClickedBlock();
                 BlockState blockState = block.getState();
 
                 /* ACTIVATION & ITEM CHECKS */
@@ -588,6 +589,7 @@ public class PlayerListener implements Listener {
                     mcMMOPlayer.processAbilityActivation(SkillType.SWORDS);
                     mcMMOPlayer.processAbilityActivation(SkillType.UNARMED);
                     mcMMOPlayer.processAbilityActivation(SkillType.WOODCUTTING);
+                    mcMMOPlayer.processAbilityActivation(SkillType.TAMING);
                 }
 
                 /* ITEM CHECKS */
@@ -602,6 +604,12 @@ public class PlayerListener implements Listener {
                 break;
 
             case LEFT_CLICK_AIR:
+                if (mcMMOPlayer.getToolPreparationMode(ToolType.BONE) && ToolType.BONE.inHand(heldItem)) {
+                    mcMMOPlayer.checkAbilityActivation(SkillType.TAMING);
+                }
+
+                // Fallthrough
+
             case LEFT_CLICK_BLOCK:
 
                 if (!player.isSneaking()) {
