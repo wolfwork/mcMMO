@@ -34,8 +34,8 @@ public class McImportCommand implements CommandExecutor {
 
     public boolean importModConfig() {
         String importFilePath = mcMMO.getModDirectory() + File.separator + "import";
-        File importFile = new File(importFilePath, "import.yml");
-        mcMMO.p.getLogger().info("Starting import of " + importFile.getName());
+        File importFile = new File(importFilePath, "import.log");
+        mcMMO.p.getLogger().info("Starting import of mod materials...");
         fileAmount = 0;
 
         HashMap<ModConfigType, ArrayList<String>> materialNames = new HashMap<ModConfigType, ArrayList<String>>();
@@ -81,6 +81,8 @@ public class McImportCommand implements CommandExecutor {
         }
         catch (FileNotFoundException e) {
             mcMMO.p.getLogger().warning("Could not find " + importFile.getAbsolutePath() + " ! (No such file or directory)");
+            mcMMO.p.getLogger().warning("Copy and paste latest.log to " + importFile.getParentFile().getAbsolutePath() + " and rename it to import.log");
+            return false;
         }
         catch (Exception e) {
             e.printStackTrace();
