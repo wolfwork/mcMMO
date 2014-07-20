@@ -119,6 +119,8 @@ commands:
     mcfools:
         aliases: [macho, jumping, throwing, wrecking, crafting, walking, swimming, falling, climbing, flying, diving, piggy]
         description: Deploy jokes
+    mcimport:
+        description: Import mod config files
 permissions:
     mcmmo.*:
         default: false
