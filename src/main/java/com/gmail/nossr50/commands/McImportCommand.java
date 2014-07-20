@@ -15,14 +15,16 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.datatypes.skills.ModConfigType;
 
 public class McImportCommand implements CommandExecutor {
+    int fileAmount;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         switch (args.length) {
             case 0:
-                importAllModConfig();
+                importModConfig();
                 return true;
 
             default:
@@ -30,16 +32,13 @@ public class McImportCommand implements CommandExecutor {
         }
     }
 
-    public boolean importAllModConfig() {
-        return (importModConfig("blocks", true) && importModConfig("tools", true) && importModConfig("armor", true));
-    }
-
-    public boolean importModConfig(String type, boolean importAll) {
+    public boolean importModConfig() {
         String importFilePath = mcMMO.getModDirectory() + File.separator + "import";
-        File importFile = new File(importFilePath, type + ".yml");
+        File importFile = new File(importFilePath, "import.yml");
         mcMMO.p.getLogger().info("Starting import of " + importFile.getName());
+        fileAmount = 0;
 
-        HashMap<String, ArrayList<String>> materialNames = new HashMap<String, ArrayList<String>>();
+        HashMap<ModConfigType, ArrayList<String>> materialNames = new HashMap<ModConfigType, ArrayList<String>>();
 
         BufferedReader in = null;
 
@@ -52,8 +51,6 @@ public class McImportCommand implements CommandExecutor {
 
             // While not at the end of the file
             while ((line = in.readLine()) != null) {
-                // Read the line in and copy it to the output it's not the player we want to edit
-
                 String[] split1 = line.split("material ");
 
                 if (split1.length != 2) {
@@ -70,26 +67,20 @@ public class McImportCommand implements CommandExecutor {
                 String[] materialSplit = materialName.split("_");
 
                 if (materialSplit.length > 1) {
-                    String modName = materialSplit[0].toLowerCase();
-                    if (!materialNames.containsKey(modName)) {
-                        materialNames.put(modName, new ArrayList<String>());
+                    // Categorise each material under a mod config type
+                    ModConfigType type = ModConfigType.getModConfigType(materialName);
+
+                    if (!materialNames.containsKey(type)) {
+                        materialNames.put(type, new ArrayList<String>());
                     }
 
-                    materialNames.get(modName).add(materialName);
+                    materialNames.get(type).add(materialName);
                     continue;
                 }
-
-                if (!materialNames.containsKey("UNKNOWN")) {
-                    materialNames.put("UNKNOWN", new ArrayList<String>());
-                }
-
-                materialNames.get("UNKNOWN").add(materialName);
             }
         }
         catch (FileNotFoundException e) {
-            if (!importAll) {
-                mcMMO.p.getLogger().warning("Could not find " + importFile.getAbsolutePath() + " ! (No such file or directory)");
-            }
+            mcMMO.p.getLogger().warning("Could not find " + importFile.getAbsolutePath() + " ! (No such file or directory)");
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -99,9 +90,29 @@ public class McImportCommand implements CommandExecutor {
             tryClose(in);
         }
 
-        createOutput(type, materialNames);
+        createOutput(materialNames);
 
+        mcMMO.p.getLogger().info("Import finished! Created " + fileAmount + " files!");
         return true;
+    }
+
+    private void createOutput(HashMap<ModConfigType, ArrayList<String>> materialNames) {
+        for (ModConfigType modConfigType : materialNames.keySet()) {
+            HashMap<String, ArrayList<String>> materialNamesType = new HashMap<String, ArrayList<String>>();
+
+            for (String materialName : materialNames.get(modConfigType)) {
+                String modName = materialName.split("_")[0].toLowerCase();
+
+                if (!materialNamesType.containsKey(modName)) {
+                    materialNamesType.put(modName, new ArrayList<String>());
+                }
+
+                materialNamesType.get(modName).add(materialName);
+            }
+
+            createOutput(modConfigType, materialNamesType);
+        }
+
     }
 
     private void tryClose(Closeable c) {
@@ -116,13 +127,14 @@ public class McImportCommand implements CommandExecutor {
         }
     }
 
-    private void createOutput(String type, HashMap<String, ArrayList<String>> materialNames) {
+    private void createOutput(ModConfigType modConfigType, HashMap<String, ArrayList<String>> materialNames) {
         File outputFilePath = new File(mcMMO.getModDirectory() + File.separator + "output");
         if (!outputFilePath.exists() && !outputFilePath.mkdirs()) {
             mcMMO.p.getLogger().severe("Could not create output directory! " + outputFilePath.getAbsolutePath());
         }
 
         FileWriter out = null;
+        String type = modConfigType.name().toLowerCase();
 
         for (String modName : materialNames.keySet()) {
             File outputFile = new File(outputFilePath, modName + "." + type + ".yml");
@@ -138,7 +150,7 @@ public class McImportCommand implements CommandExecutor {
                 }
 
                 StringBuilder writer = new StringBuilder();
-                HashMap<String, ArrayList<String>> configSections = getConfigSections(type, modName, materialNames);
+                HashMap<String, ArrayList<String>> configSections = getConfigSections(modConfigType, modName, materialNames);
 
                 if (configSections == null) {
                     mcMMO.p.getLogger().severe("Something went wrong!! type is " + type);
@@ -146,14 +158,14 @@ public class McImportCommand implements CommandExecutor {
                 }
 
                 // Write the file, go through each skill and write all the materials
-                for (String skillName : configSections.keySet()) {
-                    if (skillName.equals("UNIDENTIFIED")) {
+                for (String configSection : configSections.keySet()) {
+                    if (configSection.equals("UNIDENTIFIED")) {
                         writer.append("# This isn't a valid config section and all materials in this category need to be").append("\r\n");
                         writer.append("# copy and pasted to a valid section of this config file.").append("\r\n");
                     }
-                    writer.append(skillName).append(":").append("\r\n");
+                    writer.append(configSection).append(":").append("\r\n");
 
-                    for (String line : configSections.get(skillName)) {
+                    for (String line : configSections.get(configSection)) {
                         writer.append(line).append("\r\n");
                     }
 
@@ -173,19 +185,21 @@ public class McImportCommand implements CommandExecutor {
             }
             finally {
                 tryClose(out);
+                fileAmount++;
             }
         }
     }
 
-    private HashMap<String, ArrayList<String>> getConfigSections(String type, String modName, HashMap<String, ArrayList<String>> materialNames) {
-        if (type.equals("blocks")) {
-            return getConfigSectionsBlocks(modName, materialNames);
-        }
-        else if (type.equals("tools")) {
-            return getConfigSectionsTools(modName, materialNames);
-        }
-        else if (type.equals("armor")) {
-            return getConfigSectionsArmor(modName, materialNames);
+    private HashMap<String, ArrayList<String>> getConfigSections(ModConfigType type, String modName, HashMap<String, ArrayList<String>> materialNames) {
+        switch (type) {
+            case BLOCKS:
+                return getConfigSectionsBlocks(modName, materialNames);
+            case TOOLS:
+                return getConfigSectionsTools(modName, materialNames);
+            case ARMOR:
+                return getConfigSectionsArmor(modName, materialNames);
+            case UNKNOWN:
+                return getConfigSectionsUnknown(modName, materialNames);
         }
 
         return null;
@@ -292,7 +306,7 @@ public class McImportCommand implements CommandExecutor {
             else if (materialName.contains("HELM") || materialName.contains("HAT")) {
                 toolType = "Helmets";
             }
-            else if (materialName.contains("LEGGINGS") || materialName.contains("LEGGS") || materialName.contains("PANTS")) {
+            else if (materialName.contains("LEGGINGS") || materialName.contains("LEGS") || materialName.contains("PANTS")) {
                 toolType = "Leggings";
             }
 
@@ -310,6 +324,24 @@ public class McImportCommand implements CommandExecutor {
             skillContents.add("    " + "    " + "Repair_MinimumLevel: 0");
             skillContents.add("    " + "    " + "Repair_XpMultiplier: 1.0");
             skillContents.add("    " + "    " + "Durability: 9999");
+        }
+
+        return configSections;
+    }
+
+    private HashMap<String, ArrayList<String>> getConfigSectionsUnknown(String modName, HashMap<String, ArrayList<String>> materialNames) {
+        HashMap<String, ArrayList<String>> configSections = new HashMap<String, ArrayList<String>>();
+
+        // Go through all the materials and print them
+        for (String materialName : materialNames.get(modName)) {
+            String configKey = "UNIDENTIFIED";
+
+            if (!configSections.containsKey(configKey)) {
+                configSections.put(configKey, new ArrayList<String>());
+            }
+
+            ArrayList<String> skillContents = configSections.get(configKey);
+            skillContents.add("    " + materialName);
         }
 
         return configSections;
