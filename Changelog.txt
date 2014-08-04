@@ -9,6 +9,8 @@ Key:
 
 Version 1.5.01-dev
  + Added new child skill; Salvage
+ + Added UUID support!
+ + Added SQL connection pooling and async loading!
  + Added new feature to Herbalism. Instantly-regrown crops are protected from being broken for 1 second
  + Added option to config.yml to show the /mcstats scoreboard automatically after logging in
  + Added option to config.yml for Alchemy. Skills.Alchemy.Prevent_Hopper_Transfer_Bottles
@@ -18,6 +20,7 @@ Version 1.5.01-dev
  + Added options to tools.yml and armor.yml config files to set a pretty repair material name
  + Added full support for repairables in tools.yml and armor.yml config files
  + Added new API class SkillAPI used to get a list of valid skill names
+ + Added magical mod config file import command, for Cauldron 1.7+. Check wiki for usage
  = Fixed bug where pistons would mess with the block tracking
  = Fixed bug where the Updater was running on the main thread.
  = Fixed bug when players would use /ptp without being in a party
@@ -35,6 +38,7 @@ Version 1.5.01-dev
  = Fixed bug where party chat was using non thread safe methods
  = Fixed bug where Blast Mining unlock levels could be to high in certain occasions
  = Fixed bug where Blast Minings ability "Demolition Expert" would not work
+ = Fixed bug where Repair_Material_Quantity wasn't read in mod config files
  ! Changed SecondaryAbilityEvent to implement Cancellable and it now gets fired for damage related secondary abilities
  ! Changed the way mcMMO handles bonus damage, updated for the new damage event API
  ! Changed player data saving. Save tasks are now asynchronous

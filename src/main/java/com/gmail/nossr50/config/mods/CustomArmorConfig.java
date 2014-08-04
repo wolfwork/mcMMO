@@ -72,7 +72,7 @@ public class CustomArmorConfig extends ConfigLoader {
             boolean repairable = config.getBoolean(armorType + "." + armorName + ".Repairable");
             Material repairMaterial = Material.matchMaterial(config.getString(armorType + "." + armorName + ".Repair_Material", ""));
 
-            if (repairMaterial == null) {
+            if (repairable && (repairMaterial == null)) {
                 plugin.getLogger().warning("Incomplete repair information. This item will be unrepairable. - " + armorName);
                 repairable = false;
             }
@@ -82,7 +82,7 @@ public class CustomArmorConfig extends ConfigLoader {
                 int repairQuantity = SkillUtils.getRepairAndSalvageQuantities(new ItemStack(armorMaterial), repairMaterial, repairData);
 
                 if (repairQuantity == 0) {
-                    repairQuantity = config.getInt(armorType + "." + armorName + ".Repair_Material_Data_Quantity", 2);
+                    repairQuantity = config.getInt(armorType + "." + armorName + ".Repair_Material_Quantity", 2);
                 }
 
                 String repairItemName = config.getString(armorType + "." + armorName + ".Repair_Material_Pretty_Name");
