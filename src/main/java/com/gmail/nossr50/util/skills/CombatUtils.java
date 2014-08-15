@@ -290,6 +290,9 @@ public final class CombatUtils {
             }
 
             Player player = (Player) target;
+            if (!UserManager.hasPlayerDataKey(player)) {
+                return;
+            }
             McMMOPlayer mcMMOPlayer = UserManager.getPlayer(player);
             AcrobaticsManager acrobaticsManager = mcMMOPlayer.getAcrobaticsManager();
 
@@ -410,7 +413,7 @@ public final class CombatUtils {
                     break;
             }
 
-            dealDamage(livingEntity, damageAmount, modifiers, attacker);
+            dealDamage(livingEntity, damageAmount, attacker);
             numberOfTargets--;
         }
     }
@@ -716,6 +719,10 @@ public final class CombatUtils {
         Player player = (Player) attacker;
 
         if (Misc.isNPCEntity(player) || Misc.isNPCEntity(target)) {
+            return;
+        }
+
+        if (!player.hasMetadata(mcMMO.playerDataKey)) {
             return;
         }
 
