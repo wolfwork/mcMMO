@@ -86,7 +86,6 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                     }
                     else {
                         purgedUsers++;
-                        Misc.profileCleanup(character[0]);
                     }
                 }
 
@@ -155,7 +154,6 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
 
                     if (currentTime - lastPlayed > PURGE_TIME) {
                         removedPlayers++;
-                        Misc.profileCleanup(name);
                     }
                     else {
                         if (rewrite) {
@@ -427,7 +425,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 out.append(Config.getInstance().getMobHealthbarDefault().toString()).append(":"); // Mob Healthbar HUD
                 out.append("0:"); // Alchemy
                 out.append("0:"); // AlchemyXp
-                out.append(uuid != null ? uuid.toString() : "").append(":"); // UUID
+                out.append(uuid != null ? uuid.toString() : "NULL").append(":"); // UUID
 
                 // Add more in the same format as the line above
 
@@ -472,7 +470,12 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                     // Find if the line contains the player we want.
                     String[] character = line.split(":");
 
-                    if ((uuid == null || !character[41].equalsIgnoreCase(uuid.toString())) && !character[0].equalsIgnoreCase(playerName)) {
+                    // Compare names because we don't have a valid uuid for that player even if input uuid is not null
+                    if (character[41].equalsIgnoreCase("NULL") && !character[0].equalsIgnoreCase(playerName)) {
+                        continue;
+                    }
+                    // If input uuid is not null then we should compare uuids
+                    else if ((uuid != null && !character[41].equalsIgnoreCase(uuid.toString())) || (uuid == null && !character[0].equalsIgnoreCase(playerName))) {
                         continue;
                     }
 
@@ -637,10 +640,11 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         if (character.length < 42) {
                             mcMMO.p.getLogger().severe("Could not update UUID for " + character[0] + "!");
                             mcMMO.p.getLogger().severe("Database entry is invalid.");
-                            return false;
+                            continue;
                         }
 
-                        line = line.replace(character[41], fetchedUUIDs.remove(character[0]).toString());
+                        character[41] = fetchedUUIDs.remove(character[0]).toString();
+                        line = new StringBuilder(org.apache.commons.lang.StringUtils.join(character, ":")).append(":").toString();
                     }
 
                     writer.append(line).append("\r\n");
@@ -939,8 +943,8 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         if (character.length <= 41) {
                             // Addition of UUIDs
                             // Version 1.5.01
-                            // Add a space because otherwise it gets removed
-                            newLine.append(" :");
+                            // Add a value because otherwise it gets removed
+                            newLine.append("NULL:");
                             if (oldVersion == null) {
                                 oldVersion = "1.5.01";
                             }

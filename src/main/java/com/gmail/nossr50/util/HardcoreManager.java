@@ -1,12 +1,12 @@
 package com.gmail.nossr50.util;
 
+import java.util.HashMap;
+
 import org.bukkit.entity.Player;
 
 import com.gmail.nossr50.config.Config;
-import com.gmail.nossr50.datatypes.player.McMMOPlayer;
 import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.SkillType;
-import com.gmail.nossr50.datatypes.skills.XPGainReason;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.util.player.UserManager;
 
@@ -20,9 +20,14 @@ public final class HardcoreManager {
         PlayerProfile playerProfile = UserManager.getPlayer(player).getProfile();
         int totalLevelsLost = 0;
 
+        HashMap<String, Integer> levelChanged = new HashMap<String, Integer>();
+        HashMap<String, Float> experienceChanged = new HashMap<String, Float>();
+
         for (SkillType skillType : SkillType.NON_CHILD_SKILLS) {
             if (!skillType.getHardcoreStatLossEnabled()) {
-                break;
+                levelChanged.put(skillType.toString(), 0);
+                experienceChanged.put(skillType.toString(), 0F);
+                continue;
             }
 
             int playerSkillLevel = playerProfile.getSkillLevel(skillType);
@@ -35,19 +40,14 @@ public final class HardcoreManager {
             double statsLost = playerSkillLevel * (statLossPercentage * 0.01D);
             int levelsLost = (int) statsLost;
             int xpLost = (int) Math.floor(playerSkillXpLevel * (statsLost - levelsLost));
+            levelChanged.put(skillType.toString(), levelsLost);
+            experienceChanged.put(skillType.toString(), (float) xpLost);
 
             totalLevelsLost += levelsLost;
+        }
 
-            playerProfile.modifySkill(skillType, playerSkillLevel - levelsLost);
-            playerProfile.removeXp(skillType, xpLost);
-
-            if (playerProfile.getSkillXpLevel(skillType) < 0) {
-                playerProfile.setSkillXpLevel(skillType, 0);
-            }
-
-            if (playerProfile.getSkillLevel(skillType) < 0) {
-                playerProfile.modifySkill(skillType, 0);
-            }
+        if (!EventUtils.handleStatsLossEvent(player, levelChanged, experienceChanged)) {
+            return;
         }
 
         player.sendMessage(LocaleLoader.getString("Hardcore.DeathStatLoss.PlayerDeath", totalLevelsLost));
@@ -57,14 +57,18 @@ public final class HardcoreManager {
         double vampirismStatLeechPercentage = Config.getInstance().getHardcoreVampirismStatLeechPercentage();
         int levelThreshold = Config.getInstance().getHardcoreVampirismLevelThreshold();
 
-        McMMOPlayer killerPlayer = UserManager.getPlayer(killer);
-        PlayerProfile killerProfile = killerPlayer.getProfile();
+        PlayerProfile killerProfile = UserManager.getPlayer(killer).getProfile();
         PlayerProfile victimProfile = UserManager.getPlayer(victim).getProfile();
         int totalLevelsStolen = 0;
 
+        HashMap<String, Integer> levelChanged = new HashMap<String, Integer>();
+        HashMap<String, Float> experienceChanged = new HashMap<String, Float>();
+
         for (SkillType skillType : SkillType.NON_CHILD_SKILLS) {
             if (!skillType.getHardcoreVampirismEnabled()) {
-                break;
+                levelChanged.put(skillType.toString(), 0);
+                experienceChanged.put(skillType.toString(), 0F);
+                continue;
             }
 
             int killerSkillLevel = killerProfile.getSkillLevel(skillType);
@@ -79,22 +83,14 @@ public final class HardcoreManager {
             double statsStolen = victimSkillLevel * (vampirismStatLeechPercentage * 0.01D);
             int levelsStolen = (int) statsStolen;
             int xpStolen = (int) Math.floor(victimSkillXpLevel * (statsStolen - levelsStolen));
+            levelChanged.put(skillType.toString(), levelsStolen);
+            experienceChanged.put(skillType.toString(), (float) xpStolen);
 
             totalLevelsStolen += levelsStolen;
+        }
 
-            killerPlayer.addLevels(skillType, levelsStolen);
-            killerPlayer.beginUnsharedXpGain(skillType, xpStolen, XPGainReason.VAMPIRISM);
-
-            victimProfile.modifySkill(skillType, victimSkillLevel - levelsStolen);
-            victimProfile.removeXp(skillType, xpStolen);
-
-            if (victimProfile.getSkillXpLevel(skillType) < 0) {
-                victimProfile.setSkillXpLevel(skillType, 0);
-            }
-
-            if (victimProfile.getSkillLevel(skillType) < 0) {
-                victimProfile.modifySkill(skillType, 0);
-            }
+        if (!EventUtils.handleVampirismEvent(killer, victim, levelChanged, experienceChanged)) {
+            return;
         }
 
         if (totalLevelsStolen > 0) {

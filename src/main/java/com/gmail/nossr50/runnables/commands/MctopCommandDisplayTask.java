@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.datatypes.database.PlayerStat;
 import com.gmail.nossr50.datatypes.skills.SkillType;
 import com.gmail.nossr50.locale.LocaleLoader;
@@ -41,6 +42,9 @@ public class MctopCommandDisplayTask extends BukkitRunnable {
             displayChat();
         }
 
+        if (sender instanceof Player) {
+            ((Player) sender).removeMetadata(mcMMO.databaseCommandKey, mcMMO.p);
+        }
         sender.sendMessage(LocaleLoader.getString("Commands.mctop.Tip"));
     }
 

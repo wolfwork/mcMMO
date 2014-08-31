@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.StringUtil;
 
 import com.gmail.nossr50.mcMMO;
@@ -34,6 +35,10 @@ public class McrankCommand implements TabExecutor {
                     return true;
                 }
 
+                if (!CommandUtils.hasPlayerDataKey(sender)) {
+                    return true;
+                }
+
                 display(sender, sender.getName());
 
                 return true;
@@ -41,6 +46,10 @@ public class McrankCommand implements TabExecutor {
             case 1:
                 if (!Permissions.mcrankOthers(sender)) {
                     sender.sendMessage(command.getPermissionMessage());
+                    return true;
+                }
+
+                if (!CommandUtils.hasPlayerDataKey(sender)) {
                     return true;
                 }
 
@@ -86,6 +95,13 @@ public class McrankCommand implements TabExecutor {
             if (mcMMOPlayer.getDatabaseATS() + cooldownMillis > System.currentTimeMillis()) {
                 sender.sendMessage(LocaleLoader.getString("Commands.Database.Cooldown"));
                 return;
+            }
+
+            if (((Player) sender).hasMetadata(mcMMO.databaseCommandKey)) {
+                sender.sendMessage(LocaleLoader.getString("Commands.Database.Processing"));
+                return;
+            } else {
+                ((Player) sender).setMetadata(mcMMO.databaseCommandKey, new FixedMetadataValue(mcMMO.p, null));
             }
 
             mcMMOPlayer.actualizeDatabaseATS();

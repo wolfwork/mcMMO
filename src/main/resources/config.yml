@@ -27,6 +27,11 @@ General:
     # Play level-up sounds
     LevelUp_Sounds: true
 
+    # This should fix blocks being broken client side, but not server-side.
+    # Enable to refresh the chunks around a player at the end of Super Breaker,
+    # Giga Drill Breaker, and Berserk. Resource intensive for larger servers.
+    Refresh_Chunks: false
+
 #
 #  Settings for the mcMMO scoreboards
 ###
@@ -126,10 +131,16 @@ MySQL:
         TablePrefix: mcmmo_
         # This setting is the max simultaneous mysql connections allowed at a time, needs to be
         # high enough to support multiple player logins in quick succession
-        MaxConnections: 30
+        MaxConnections:
+            Misc: 30
+            Load: 30
+            Save: 30
         # This setting is the max size of the pool of cached connections that we hold available
         # at any given time
-        MaxPoolSize: 20
+        MaxPoolSize:
+            Misc: 10
+            Load: 20
+            Save: 20
     Server:
         Port: 3306
         Address: localhost
