@@ -161,6 +161,7 @@ public class EventUtils {
 
         if (!isCancelled) {
             UserManager.getPlayer(player).addXp(skill, event.getRawXpGained());
+            UserManager.getPlayer(player).getProfile().registerXpGain(skill, event.getRawXpGained());
         }
 
         return !isCancelled;

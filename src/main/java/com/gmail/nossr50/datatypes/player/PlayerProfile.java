@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.DelayQueue;
 
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.config.Config;
 import com.gmail.nossr50.config.experience.ExperienceConfig;
 import com.gmail.nossr50.datatypes.MobHealthbarType;
 import com.gmail.nossr50.datatypes.experience.FormulaType;
+import com.gmail.nossr50.datatypes.experience.SkillXpGain;
 import com.gmail.nossr50.datatypes.skills.AbilityType;
 import com.gmail.nossr50.datatypes.skills.SkillType;
 import com.gmail.nossr50.runnables.player.PlayerProfileSaveTask;
@@ -31,6 +33,10 @@ public class PlayerProfile {
     private final Map<SkillType, Integer>   skills     = new HashMap<SkillType, Integer>();   // Skill & Level
     private final Map<SkillType, Float>     skillsXp   = new HashMap<SkillType, Float>();     // Skill & XP
     private final Map<AbilityType, Integer> abilityDATS = new HashMap<AbilityType, Integer>(); // Ability & Cooldown
+
+    // Store previous XP gains for deminished returns
+    private DelayQueue<SkillXpGain> gainedSkillsXp = new DelayQueue<SkillXpGain>();
+    private HashMap<SkillType, Float> rollingSkillsXp = new HashMap<SkillType, Float>();
 
     @Deprecated
     public PlayerProfile(String playerName) {
@@ -274,7 +280,46 @@ public class PlayerProfile {
     }
 
     /**
-     * Get the total amount of Xp before the next level.
+     * Get the registered amount of experience gained
+     * This is used for diminished XP returns
+     *
+     * @return xp Experience amount registered
+     */
+    public float getRegisteredXpGain(SkillType skillType) {
+        float xp = 0F;
+
+        if (rollingSkillsXp.get(skillType) != null) {
+            xp = rollingSkillsXp.get(skillType);
+        }
+
+        return xp;
+    }
+
+    /**
+     * Register an experience gain
+     * This is used for diminished XP returns
+     *
+     * @param skillType Skill being used
+     * @param xp Experience amount to add
+     */
+    public void registerXpGain(SkillType skillType, float xp) {
+        gainedSkillsXp.add(new SkillXpGain(skillType, xp));
+        rollingSkillsXp.put(skillType, getRegisteredXpGain(skillType) + xp);
+    }
+
+    /**
+     * Remove experience gains older than a given time
+     * This is used for diminished XP returns
+     */
+    public void purgeExpiredXpGains() {
+        SkillXpGain gain;
+        while ((gain = gainedSkillsXp.poll()) != null) {
+            rollingSkillsXp.put(gain.getSkill(), getRegisteredXpGain(gain.getSkill()) - gain.getXp());
+        }
+    }
+
+    /**
+     * Get the amount of Xp remaining before the next level.
      *
      * @param skillType Type of skill to check
      * @return the total amount of Xp until next level

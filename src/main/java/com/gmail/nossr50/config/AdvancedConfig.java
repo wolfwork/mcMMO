@@ -420,8 +420,8 @@ public class AdvancedConfig extends AutoUpdateConfigLoader {
             reason.add("Skills.Salvage.MaxPercentageLevel should be at least 1!");
         }
 
-        if (getAdvancedSalvageUnlockLevel() < 1) {
-            reason.add("Skills.Salvage.AdvancedSalvage.UnlockLevel should be at least 1!");
+        if (getAdvancedSalvageUnlockLevel() < 0) {
+            reason.add("Skills.Salvage.AdvancedSalvage.UnlockLevel should be at least 0!");
         }
 
         List<Salvage.Tier> salvageTierList = Arrays.asList(Salvage.Tier.values());
@@ -442,8 +442,8 @@ public class AdvancedConfig extends AutoUpdateConfigLoader {
             if (tier != Salvage.Tier.EIGHT) {
                 Salvage.Tier nextTier = salvageTierList.get(salvageTierList.indexOf(tier) - 1);
 
-                if (getArcaneSalvageRankLevel(tier) >= getArcaneSalvageRankLevel(nextTier)) {
-                    reason.add("Skills.Salvage.ArcaneSalvage.Rank_Levels.Rank_" + tier.toNumerical() + " should be less than Skills.Salvage.ArcaneSalvage.Rank_Levels.Rank_" + nextTier.toNumerical() + "!");
+                if (getArcaneSalvageRankLevel(tier) > getArcaneSalvageRankLevel(nextTier)) {
+                    reason.add("Skills.Salvage.ArcaneSalvage.Rank_Levels.Rank_" + tier.toNumerical() + " should be less than or equal to Skills.Salvage.ArcaneSalvage.Rank_Levels.Rank_" + nextTier.toNumerical() + "!");
                 }
 
                 if (getArcaneSalvageExtractFullEnchantsChance(tier) > getArcaneSalvageExtractFullEnchantsChance(nextTier)) {
