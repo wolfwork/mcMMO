@@ -447,6 +447,11 @@ Skills:
             ChanceMax: 75.0
             MaxBonusLevel: 750
 
+            # DamagePlayer: Bleeding damage dealt to players
+            # DamageMobs: Bleeding damage dealt to mobs
+            DamagePlayer: 1.0
+            DamageMobs: 2.0
+
             # These settings determine how long the Bleeding effect lasts
             MaxTicks: 3
             BaseTicks: 2
@@ -520,6 +525,10 @@ Skills:
             # MaxHorseJumpStrength: The maximum jump strength a summoned horse can have
             MinHorseJumpStrength: 0.7
             MaxHorseJumpStrength: 2.0
+
+        Pummel:
+            # ChanceMax: Maximum chance of triggering pummel
+            Chance: 10.0
     #
     #  Settings for Unarmed
     ###

@@ -1,5 +1,11 @@
 package com.gmail.nossr50.skills.taming;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
@@ -18,18 +24,23 @@ import com.gmail.nossr50.datatypes.skills.SecondaryAbility;
 import com.gmail.nossr50.datatypes.skills.SkillType;
 import com.gmail.nossr50.datatypes.skills.XPGainReason;
 import com.gmail.nossr50.events.fake.FakeEntityTameEvent;
+import com.gmail.nossr50.events.skills.secondaryabilities.SecondaryAbilityWeightedActivationCheckEvent;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.runnables.skills.BleedTimerTask;
 import com.gmail.nossr50.skills.SkillManager;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.StringUtils;
+import com.gmail.nossr50.util.player.UserManager;
+import com.gmail.nossr50.util.skills.ParticleEffectUtils;
 import com.gmail.nossr50.util.skills.SkillUtils;
 
 public class TamingManager extends SkillManager {
     public TamingManager(McMMOPlayer mcMMOPlayer) {
         super(mcMMOPlayer, SkillType.TAMING);
     }
+
+    private static HashMap<EntityType, List<TrackedTamingEntity>> summonedEntities = new HashMap<EntityType, List<TrackedTamingEntity>>();
 
     public boolean canUseThickFur() {
         return getSkillLevel() >= Taming.thickFurUnlockLevel && Permissions.secondaryAbilityEnabled(getPlayer(), SecondaryAbility.THICK_FUR);
@@ -197,6 +208,45 @@ public class TamingManager extends SkillManager {
         owner.sendMessage(LocaleLoader.getString("Taming.Listener.Wolf"));
     }
 
+    public void pummel(LivingEntity target, Wolf wolf) {
+        double chance = 10 / activationChance;
+        SecondaryAbilityWeightedActivationCheckEvent event = new SecondaryAbilityWeightedActivationCheckEvent(getPlayer(), SecondaryAbility.PUMMEL, chance);
+        mcMMO.p.getServer().getPluginManager().callEvent(event);
+        if ((event.getChance() * activationChance) <= Misc.getRandom().nextInt(activationChance)) {
+            return;
+        }
+
+        ParticleEffectUtils.playGreaterImpactEffect(target);
+        target.setVelocity(wolf.getLocation().getDirection().normalize().multiply(1.5D));
+
+        if (target instanceof Player) {
+            Player defender = (Player) target;
+
+            if (UserManager.getPlayer(defender).useChatNotifications()) {
+                defender.sendMessage("Wolf pummeled at you");
+            }
+        }
+    }
+
+    public void attackTarget(LivingEntity target) {
+        double range = 5;
+        Player player = getPlayer();
+
+        for (Entity entity : player.getNearbyEntities(range, range, range)) {
+            if (entity.getType() != EntityType.WOLF) {
+                continue;
+            }
+
+            Wolf wolf = (Wolf) entity;
+
+            if (!wolf.isTamed() || (wolf.getOwner() != player) || wolf.isSitting()) {
+                continue;
+            }
+
+            wolf.setTarget(target);
+        }
+    }
+
     /**
      * Handle the Call of the Wild ability.
      *
@@ -208,6 +258,7 @@ public class TamingManager extends SkillManager {
 
         ItemStack heldItem = player.getItemInHand();
         int heldItemAmount = heldItem.getAmount();
+        Location location = player.getLocation();
 
         if (heldItemAmount < summonAmount) {
             player.sendMessage(LocaleLoader.getString("Skills.NeedMore", StringUtils.getPrettyItemString(heldItem.getType())));
@@ -219,9 +270,14 @@ public class TamingManager extends SkillManager {
         }
 
         int amount = Config.getInstance().getTamingCOTWAmount(type);
+        int tamingCOTWLength = Config.getInstance().getTamingCOTWLength(type);
 
         for (int i = 0; i < amount; i++) {
-            LivingEntity entity = (LivingEntity) player.getWorld().spawnEntity(player.getLocation(), type);
+            if (!summonAmountCheck(type)) {
+                return;
+            }
+
+            LivingEntity entity = (LivingEntity) player.getWorld().spawnEntity(location, type);
 
             FakeEntityTameEvent event = new FakeEntityTameEvent(entity, player);
             mcMMO.p.getServer().getPluginManager().callEvent(event);
@@ -233,6 +289,8 @@ public class TamingManager extends SkillManager {
             entity.setMetadata(mcMMO.entityMetadataKey, mcMMO.metadataValue);
             ((Tameable) entity).setOwner(player);
             entity.setRemoveWhenFarAway(false);
+
+            addToTracker(entity);
 
             switch (type) {
                 case OCELOT:
@@ -261,12 +319,20 @@ public class TamingManager extends SkillManager {
 
             if (Permissions.renamePets(player)) {
                 entity.setCustomName(LocaleLoader.getString("Taming.Summon.Name.Format", player.getName(), StringUtils.getPrettyEntityTypeString(type)));
-                entity.setCustomNameVisible(true);
             }
+
+            ParticleEffectUtils.playCallOfTheWildEffect(entity);
         }
 
         player.setItemInHand(heldItemAmount == summonAmount ? null : new ItemStack(heldItem.getType(), heldItemAmount - summonAmount));
-        player.sendMessage(LocaleLoader.getString("Taming.Summon.Complete"));
+
+        String lifeSpan = "";
+        if (tamingCOTWLength > 0) {
+            lifeSpan = LocaleLoader.getString("Taming.Summon.Lifespan", tamingCOTWLength);
+        }
+
+        player.sendMessage(LocaleLoader.getString("Taming.Summon.Complete") + lifeSpan);
+        player.playSound(location, Sound.FIREWORK_LARGE_BLAST2, 1F, 0.5F);
     }
 
     private boolean rangeCheck(EntityType type) {
@@ -285,5 +351,43 @@ public class TamingManager extends SkillManager {
         }
 
         return true;
+    }
+
+    private boolean summonAmountCheck(EntityType entityType) {
+        Player player = getPlayer();
+
+        int maxAmountSummons = Config.getInstance().getTamingCOTWMaxAmount(entityType);
+
+        if (maxAmountSummons <= 0) {
+            return true;
+        }
+
+        List<TrackedTamingEntity> trackedEntities = getTrackedEntities(entityType);
+        int summonAmount = trackedEntities == null ? 0 : trackedEntities.size();
+
+        if (summonAmount >= maxAmountSummons) {
+            player.sendMessage(LocaleLoader.getString("Taming.Summon.Fail.TooMany", maxAmountSummons));
+            return false;
+        }
+
+        return true;
+    }
+
+    protected static void addToTracker(LivingEntity livingEntity) {
+        TrackedTamingEntity trackedEntity = new TrackedTamingEntity(livingEntity);
+
+        if (!summonedEntities.containsKey(livingEntity.getType())) {
+            summonedEntities.put(livingEntity.getType(), new ArrayList<TrackedTamingEntity>());
+        }
+
+        summonedEntities.get(livingEntity.getType()).add(trackedEntity);
+    }
+
+    protected static List<TrackedTamingEntity> getTrackedEntities(EntityType entityType) {
+        return summonedEntities.get(entityType);
+    }
+
+    protected static void removeFromTracker(TrackedTamingEntity trackedEntity) {
+        summonedEntities.get(trackedEntity.getLivingEntity().getType()).remove(trackedEntity);
     }
 }
