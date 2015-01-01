@@ -1,8 +1,8 @@
 # mcMMO
 ## The RPG lovers mod
 
-### Dev builds
-Our latest development builds are available ~~[here](http://ci.mcmmo.info)~~. Unfortunately, the mcMMO site is down; a temporary dev build location is hosted [here](http://ci.ecocitycraft.com/job/mcMMO/).
+### Builds
+Currently, you can obtain our builds via the Spigot resource page: http://www.spigotmc.org/resources/mcmmo.2445/
 
 ### Brief Description
 The goal of mcMMO is to take core Minecraft game mechanics and expand them into add an extensive and quality RPG experience. Everything in mcMMO has been carefully thought out and is constantly being improved upon. Currently, mcMMO adds fourteen unique skills to train and level in. Each of these skills is highly customizable through our configuration files, allowing server admins to tweak mcMMO to best suit the needs of his or her server. Know that the mcMMO team is dedicated to providing an ever-evolving experience, and that we carefully read all feedback and bug reports in order to evaluate and balance the mechanics of mcMMO in every update.
@@ -10,11 +10,10 @@ The goal of mcMMO is to take core Minecraft game mechanics and expand them into 
 ## About the Team
 
 mcMMO is currently developed by a team of individuals from all over the world.
-### Glorious Leader
-[![gmcferrin](http://www.gravatar.com/avatar/b64c52daf25d206b27650788b5813b7b.png)]
-(https://github.com/gmcferrin)
 
 ### Developers
+[![gmcferrin](http://www.gravatar.com/avatar/b64c52daf25d206b27650788b5813b7b.png)]
+(https://github.com/gmcferrin)
 [![bm01](http://www.gravatar.com/avatar/ec8146f5358177f12e9a252271bbc391.png)]
 (https://github.com/bm01)
 [![Glitchfinder](http://www.gravatar.com/avatar/5aa4cce22f72ae9c002ecec30f061d00.png)]
@@ -48,4 +47,4 @@ Required Libraries:
 * EMetrics
 * Bukkit
 
-http://dev.bukkit.org/server-mods/mcmmo for more up to date information.
+http://www.spigotmc.org/resources/mcmmo.2445/ for more up to date information.

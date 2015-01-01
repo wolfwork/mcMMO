@@ -45,6 +45,10 @@ Scoreboard:
     # Show the /mcstats scoreboard automatically after logging in
     Show_Stats_After_Login: false
 
+    # Show scoreboard tips 5 times. Tips are only displayed once for every login session.
+    # Set to 0 to never show these tips.
+    Tips_Amount: 5
+
     # Add some more color on the board :-)
     Rainbows: false
 
@@ -207,9 +211,14 @@ Items:
         Warmup: 5
         RecentlyHurt_Cooldown: 60
         Prevent_Use_Underground: true
+        # Attempt to use the bed spawn, if one is available
+        Use_Bed_Spawn: true
         Use_Cost: 1
         Recipe_Cost: 5
         Item_Name: FEATHER
+        Sound_Enabled: true
+    Flux_Pickaxe:
+        Enabled: true
         Sound_Enabled: true
 
 #
@@ -386,6 +395,8 @@ Skills:
         # When using Unarmed, picked up items will automatically get moved to a free slot instead of going in the slot
         # of your hand. Should item pickup be disabled when your entire inventory - except for your hand - is full?
         Item_Pickup_Disabled_Full_Inventory: true
+        # Any attacks made without a tool, i.e. with one's open hand, a block, etc., will count as unarmed. 
+        Items_As_Unarmed: false
     Woodcutting:
         Tree_Feller_Sounds: true
         Level_Cap: 0
@@ -479,8 +490,9 @@ Particles:
     LargeFireworks: true
 
     # Use particle effect when these abilities trigger
-    Dodge: true
     Bleed: true
+    Dodge: true
+    Flux: true
     Greater_Impact: true
     Call_of_the_Wild: true
 

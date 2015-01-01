@@ -19,7 +19,6 @@ public final class MaterialUtils {
             case REDSTONE_ORE:
             case EMERALD_ORE:
                 return true;
-
             default:
                 return mcMMO.getModManager().isCustomOre(data);
         }

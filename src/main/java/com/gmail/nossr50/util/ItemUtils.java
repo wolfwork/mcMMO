@@ -13,6 +13,7 @@ import org.bukkit.material.Dye;
 
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.config.party.ItemWeightConfig;
+import com.gmail.nossr50.config.Config;
 import com.gmail.nossr50.locale.LocaleLoader;
 
 public final class ItemUtils {
@@ -144,6 +145,20 @@ public final class ItemUtils {
             default:
                 return mcMMO.getModManager().isCustomPickaxe(type);
         }
+    }
+
+    /**
+     * Checks if the item counts as unarmed.
+     *
+     * @param item Item to check
+     * @return true if the item counts as unarmed, false otherwise
+     */
+    public static boolean isUnarmed(ItemStack item) {
+        if (Config.getInstance().getUnarmedItemsAsUnarmed()) {
+            return !isMinecraftTool(item);
+        }
+
+        return item.getType() == Material.AIR;
     }
 
     /**
@@ -693,5 +708,14 @@ public final class ItemUtils {
 
         ItemMeta itemMeta = item.getItemMeta();
         return itemMeta.hasDisplayName() && itemMeta.getDisplayName().equals(ChatColor.GOLD + LocaleLoader.getString("Item.ChimaeraWing.Name"));
+    }
+
+    public static boolean isFluxPickaxe(ItemStack item) {
+        if (!isMcMMOItem(item)) {
+            return false;
+        }
+
+        ItemMeta itemMeta = item.getItemMeta();
+        return itemMeta.hasDisplayName() && itemMeta.getDisplayName().equals(ChatColor.GOLD + LocaleLoader.getString("Item.FluxPickaxe.Name"));
     }
 }

@@ -88,6 +88,11 @@ public class ExperienceConfig extends AutoUpdateConfigLoader {
             }
         }
 
+        /* Archery */
+        if (getArcheryDistanceMultiplier() < 0) {
+            reason.add("Experience.Archery.Distance_Multiplier should be at least 0!");
+        }
+
         /* Combat XP Multipliers */
         if (getAnimalsXP() < 0) {
             reason.add("Experience.Combat.Multiplier.Animals should be at least 0!");
@@ -198,6 +203,7 @@ public class ExperienceConfig extends AutoUpdateConfigLoader {
     public double getCombatXP(EntityType entity) { return config.getDouble("Experience.Combat.Multiplier." + StringUtils.getPrettyEntityTypeString(entity).replace(" ", "_")); }
     public double getAnimalsXP() { return config.getDouble("Experience.Combat.Multiplier.Animals", 1.0); }
     public double getWitherSkeletonXP() { return config.getDouble("Experience.Combat.Multiplier.Wither_Skeleton", 4.0); }
+    public double getElderGuardianXP() { return config.getDouble("Experience.Combat.Multiplier.Elder_Guardian", 4.0); }
 
     /* Materials  */
     public int getXp(SkillType skill, Material material) { return config.getInt("Experience." + StringUtils.getCapitalized(skill.toString()) + "." + StringUtils.getPrettyItemString(material).replace(" ", "_")); }
@@ -211,6 +217,9 @@ public class ExperienceConfig extends AutoUpdateConfigLoader {
 
     /* Alchemy */
     public double getPotionXP(PotionStage stage) { return config.getDouble("Experience.Alchemy.Potion_Stage_" + stage.toNumerical(), 10D); }
+
+    /* Archery */
+    public double getArcheryDistanceMultiplier() { return config.getDouble("Experience.Archery.Distance_Multiplier", 0.025); }
 
     /* Excavation */
     public int getDirtAndSandXp(MaterialData data) {
@@ -368,4 +377,5 @@ public class ExperienceConfig extends AutoUpdateConfigLoader {
     public int getWoodcuttingTreeXP(TreeSpecies species) { return config.getInt("Experience.Woodcutting." + StringUtils.getPrettyTreeSpeciesString(species).replace(" ", "_")); }
     public int getWoodcuttingXPHugeBrownMushroom() { return config.getInt("Experience.Woodcutting.Huge_Mushroom_Brown", 70); }
     public int getWoodcuttingXPHugeRedMushroom() { return config.getInt("Experience.Woodcutting.Huge_Mushroom_Red", 70); }
+
 }

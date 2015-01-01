@@ -320,6 +320,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         writer.append(profile.getSkillLevel(SkillType.ALCHEMY)).append(":");
                         writer.append(profile.getSkillXpLevel(SkillType.ALCHEMY)).append(":");
                         writer.append(uuid.toString()).append(":");
+                        writer.append(profile.getScoreboardTipsShown()).append(":");
                         writer.append("\r\n");
                     }
                 }
@@ -426,7 +427,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 out.append("0:"); // Alchemy
                 out.append("0:"); // AlchemyXp
                 out.append(uuid != null ? uuid.toString() : "NULL").append(":"); // UUID
-
+                out.append("0:"); // Scoreboard tips shown
                 // Add more in the same format as the line above
 
                 out.newLine();
@@ -857,7 +858,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         }
 
                         // Prevent the same player from being present multiple times
-                        if (character.length == 42 && (!character[41].isEmpty() && !players.add(character[41]))) {
+                        if (character.length >= 42 && (!character[41].isEmpty() && !players.add(character[41]))) {
                             continue;
                         }
 
@@ -889,7 +890,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         }
 
                         // If they're valid, rewrite them to the file.
-                        if (character.length == 42) {
+                        if (character.length == 43) {
                             writer.append(line).append("\r\n");
                             continue;
                         }
@@ -952,6 +953,14 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                                 oldVersion = "1.5.01";
                             }
                         }
+                        if (character.length <= 42) {
+                            // Addition of scoreboard tips auto disable
+                            // Version 1.5.02
+                            newLine.append("0").append(":");
+                            if (oldVersion == null) {
+                                oldVersion = "1.5.02";
+                            }
+                        }
 
                         // Remove any blanks that shouldn't be there, and validate the other fields
                         String[] newCharacter = newLine.toString().split(":");
@@ -961,7 +970,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                             if (newCharacter[i].isEmpty() && !(i == 2 || i == 3 || i == 23 || i == 33 || i == 41)) {
                                 corrupted = true;
 
-                                if (newCharacter.length != 42) {
+                                if (newCharacter.length != 43) {
                                     newCharacter = (String[]) ArrayUtils.remove(newCharacter, i);
                                 }
                                 else {
@@ -1087,6 +1096,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
         Map<SkillType, Float>     skillsXp   = new EnumMap<SkillType, Float>(SkillType.class);     // Skill & XP
         Map<AbilityType, Integer> skillsDATS = new EnumMap<AbilityType, Integer>(AbilityType.class); // Ability & Cooldown
         MobHealthbarType mobHealthbarType;
+        int scoreboardTipsShown;
 
         // TODO on updates, put new values in a try{} ?
 
@@ -1132,7 +1142,14 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
             uuid = null;
         }
 
-        return new PlayerProfile(character[0], uuid, skills, skillsXp, skillsDATS, mobHealthbarType);
+        try {
+            scoreboardTipsShown = Integer.valueOf(character[42]);
+        }
+        catch (Exception e) {
+            scoreboardTipsShown = 0;
+        }
+
+        return new PlayerProfile(character[0], uuid, skills, skillsXp, skillsDATS, mobHealthbarType, scoreboardTipsShown);
     }
 
     private Map<SkillType, Integer> getSkillMapFromLine(String[] character) {

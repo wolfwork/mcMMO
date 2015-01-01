@@ -15,6 +15,7 @@ import org.bukkit.material.SmoothBrick;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.skills.repair.Repair;
 import com.gmail.nossr50.skills.salvage.Salvage;
+import com.gmail.nossr50.util.temp.DualSupport;
 
 public final class BlockUtils {
     private BlockUtils() {}
@@ -63,10 +64,11 @@ public final class BlockUtils {
             case DROPPER:
             case HOPPER:
             case TRAPPED_CHEST:
+            case IRON_DOOR:
                 return false;
 
             default:
-                return !isMcMMOAnvil(blockState) && !mcMMO.getModManager().isCustomAbilityBlock(blockState);
+                return DualSupport.canActivateAbilities(blockState) && !isMcMMOAnvil(blockState) && !mcMMO.getModManager().isCustomAbilityBlock(blockState);
         }
     }
 
@@ -164,7 +166,7 @@ public final class BlockUtils {
                 return true;
 
             default:
-                return isOre(blockState) || mcMMO.getModManager().isCustomMiningBlock(blockState);
+                return DualSupport.affectedBySuperBreaker(blockState) || isOre(blockState) || mcMMO.getModManager().isCustomMiningBlock(blockState);
         }
     }
 

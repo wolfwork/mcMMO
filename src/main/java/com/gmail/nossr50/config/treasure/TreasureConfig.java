@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -56,6 +57,7 @@ public class TreasureConfig extends ConfigLoader {
     public List<ShakeTreasure> shakeFromMushroomCow = new ArrayList<ShakeTreasure>();
     public List<ShakeTreasure> shakeFromPig         = new ArrayList<ShakeTreasure>();
     public List<ShakeTreasure> shakeFromPigZombie   = new ArrayList<ShakeTreasure>();
+    public List<ShakeTreasure> shakeFromPlayer      = new ArrayList<ShakeTreasure>();
     public List<ShakeTreasure> shakeFromSheep       = new ArrayList<ShakeTreasure>();
     public List<ShakeTreasure> shakeFromSkeleton    = new ArrayList<ShakeTreasure>();
     public List<ShakeTreasure> shakeFromSlime       = new ArrayList<ShakeTreasure>();
@@ -174,6 +176,11 @@ public class TreasureConfig extends ConfigLoader {
             else if (materialName.contains("INK_SACK")) {
                 material = Material.INK_SACK;
             }
+            else if (materialName.contains("INVENTORY")) {
+                // Use magic material BED_BLOCK to know that we're grabbing something from the inventory and not a normal treasure
+                shakeFromPlayer.add(new ShakeTreasure(new ItemStack(Material.BED_BLOCK, 1, (byte) 0), 1, getInventoryStealDropChance(), getInventoryStealDropLevel()));
+                continue;
+            }
             else {
                 material = Material.matchMaterial(materialName);
             }
@@ -236,6 +243,22 @@ public class TreasureConfig extends ConfigLoader {
 
                 try {
                     item = new Potion(PotionType.valueOf(potionType.toUpperCase().trim())).toItemStack(amount);
+
+                    if (config.contains(type + "." + treasureName + ".Custom_Name")) {
+                        ItemMeta itemMeta = item.getItemMeta();
+                        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', config.getString(type + "." + treasureName + ".Custom_Name")));
+                        item.setItemMeta(itemMeta);
+                    }
+
+                    if (config.contains(type + "." + treasureName + ".Lore")) {
+                        ItemMeta itemMeta = item.getItemMeta();
+                        List<String> lore = new ArrayList<String>();
+                        for (String s : config.getStringList(type + "." + treasureName + ".Lore")) {
+                            lore.add(ChatColor.translateAlternateColorCodes('&', s));
+                        }
+                        itemMeta.setLore(lore);
+                        item.setItemMeta(itemMeta);
+                    }
                 }
                 catch (IllegalArgumentException ex) {
                     reason.add("Invalid Potion_Type: " + potionType);
@@ -249,6 +272,22 @@ public class TreasureConfig extends ConfigLoader {
                     dye.setColor(DyeColor.valueOf(color.toUpperCase().trim()));
 
                     item = dye.toItemStack(amount);
+
+                    if (config.contains(type + "." + treasureName + ".Custom_Name")) {
+                        ItemMeta itemMeta = item.getItemMeta();
+                        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', config.getString(type + "." + treasureName + ".Custom_Name")));
+                        item.setItemMeta(itemMeta);
+                    }
+
+                    if (config.contains(type + "." + treasureName + ".Lore")) {
+                        ItemMeta itemMeta = item.getItemMeta();
+                        List<String> lore = new ArrayList<String>();
+                        for (String s : config.getStringList(type + "." + treasureName + ".Lore")) {
+                            lore.add(ChatColor.translateAlternateColorCodes('&', s));
+                        }
+                        itemMeta.setLore(lore);
+                        item.setItemMeta(itemMeta);
+                    }
                 }
                 catch (IllegalArgumentException ex) {
                     reason.add("Invalid Dye_Color: " + color);
@@ -259,13 +298,17 @@ public class TreasureConfig extends ConfigLoader {
 
                 if (config.contains(type + "." + treasureName + ".Custom_Name")) {
                     ItemMeta itemMeta = item.getItemMeta();
-                    itemMeta.setDisplayName(config.getString(type + "." + treasureName + ".Custom_Name"));
+                    itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', config.getString(type + "." + treasureName + ".Custom_Name")));
                     item.setItemMeta(itemMeta);
                 }
 
                 if (config.contains(type + "." + treasureName + ".Lore")) {
                     ItemMeta itemMeta = item.getItemMeta();
-                    itemMeta.setLore(config.getStringList(type + "." + treasureName + ".Lore"));
+                    List<String> lore = new ArrayList<String>();
+                    for (String s : config.getStringList(type + "." + treasureName + ".Lore")) {
+                        lore.add(ChatColor.translateAlternateColorCodes('&', s));
+                    }
+                    itemMeta.setLore(lore);
                     item.setItemMeta(itemMeta);
                 }
             }
@@ -315,6 +358,9 @@ public class TreasureConfig extends ConfigLoader {
                     }
                     else if (type.equals("Shake.PIG_ZOMBIE")) {
                         shakeFromPigZombie.add(shakeTreasure);
+                    }
+                    else if (type.equals("Shake.PLAYER")) {
+                        shakeFromPlayer.add(shakeTreasure);
                     }
                     else if (type.equals("Shake.SHEEP")) {
                         shakeFromSheep.add(shakeTreasure);
@@ -434,6 +480,11 @@ public class TreasureConfig extends ConfigLoader {
             }
         }
     }
+
+    public boolean getInventoryStealEnabled() { return config.contains("Shake.PLAYER.INVENTORY"); }
+    public boolean getInventoryStealStacks() { return config.getBoolean("Shake.PLAYER.INVENTORY.Whole_Stacks"); }
+    public double getInventoryStealDropChance() { return config.getDouble("Shake.PLAYER.INVENTORY.Drop_Chance"); }
+    public int getInventoryStealDropLevel() { return config.getInt("Shake.PLAYER.INVENTORY.Drop_Level"); }
 
     public double getItemDropRate(int tier, Rarity rarity) { return config.getDouble("Item_Drop_Rates.Tier_" + tier + "." + rarity.toString()); }
     public double getEnchantmentDropRate(int tier, Rarity rarity) { return config.getDouble("Enchantment_Drop_Rates.Tier_" + tier + "." + rarity.toString()); }

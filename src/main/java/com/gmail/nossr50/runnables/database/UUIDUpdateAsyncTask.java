@@ -20,7 +20,7 @@ public class UUIDUpdateAsyncTask extends BukkitRunnable {
     private static final int MAX_LOOKUP = Math.max(HiddenConfig.getInstance().getUUIDConvertAmount(), 100);
     private static final int RATE_LIMIT = HiddenConfig.getInstance().getMojangRateLimit();
     private static final long LIMIT_PERIOD = HiddenConfig.getInstance().getMojangLimitPeriod();
-    private static final int BATCH_SIZE = 5000;
+    private static final int BATCH_SIZE = MAX_LOOKUP * 3;
 
     private List<String> userNames;
     private int size;
@@ -68,6 +68,17 @@ public class UUIDUpdateAsyncTask extends BukkitRunnable {
                 fetchedUUIDs.putAll(new UUIDFetcher(userNamesSection).call());
             }
             catch (Exception e) {
+                // Handle 429
+                if (e.getMessage().contains("429")) {
+                    try {
+                        Thread.sleep(LIMIT_PERIOD);
+                    } catch (InterruptedException ex) {
+                        e.printStackTrace();
+                        return;
+                    }
+                    continue;
+                }
+
                 plugin.getLogger().log(Level.SEVERE, "Unable to fetch UUIDs!", e);
                 return;
             }
@@ -77,7 +88,7 @@ public class UUIDUpdateAsyncTask extends BukkitRunnable {
             size = userNames.size();
 
             Misc.printProgress(checkedUsers, DatabaseManager.progressInterval, startMillis);
-            if (fetchedUUIDs.size() > BATCH_SIZE) {
+            if (fetchedUUIDs.size() >= BATCH_SIZE) {
                 mcMMO.getDatabaseManager().saveUserUUIDs(fetchedUUIDs);
                 fetchedUUIDs = new HashMap<String, UUID>();
             }

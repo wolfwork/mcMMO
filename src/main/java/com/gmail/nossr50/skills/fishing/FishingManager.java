@@ -15,7 +15,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fish;
@@ -29,6 +28,8 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.Wool;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
@@ -135,7 +136,7 @@ public class FishingManager extends SkillManager {
             player.setItemInHand(null);
         }
 
-        Creature kraken = (Creature) world.spawnEntity(player.getEyeLocation(), (Misc.getRandom().nextInt(100) == 0 ? EntityType.CHICKEN : EntityType.SQUID));
+        LivingEntity kraken = (LivingEntity) world.spawnEntity(player.getEyeLocation(), (Misc.getRandom().nextInt(100) == 0 ? EntityType.CHICKEN : EntityType.SQUID));
         kraken.setCustomName(AdvancedConfig.getInstance().getKrakenName());
 
         if (!kraken.isValid()) {
@@ -394,6 +395,45 @@ public class FishingManager extends SkillManager {
 
             // Extra processing depending on the mob and drop type
             switch (target.getType()) {
+                case PLAYER:
+                    Player targetPlayer = (Player) target;
+
+                    switch (drop.getType()) {
+                        case SKULL_ITEM:
+                            drop.setDurability((short) 3);
+                            SkullMeta skullMeta = (SkullMeta) drop.getItemMeta();
+                            skullMeta.setOwner(targetPlayer.getName());
+                            drop.setItemMeta(skullMeta);
+                            break;
+
+                        case BED_BLOCK:
+                            if (TreasureConfig.getInstance().getInventoryStealEnabled()) {
+                                PlayerInventory inventory = targetPlayer.getInventory();
+                                int length = inventory.getContents().length;
+                                int slot = Misc.getRandom().nextInt(length);
+                                drop = inventory.getItem(slot);
+
+                                if (drop == null) {
+                                    break;
+                                }
+
+                                if (TreasureConfig.getInstance().getInventoryStealStacks()) {
+                                    inventory.setItem(slot, null);
+                                }
+                                else {
+                                    inventory.setItem(slot, (drop.getAmount() > 1) ? new ItemStack(drop.getType(), drop.getAmount() - 1) : null);
+                                    drop.setAmount(1);
+                                }
+
+                                targetPlayer.updateInventory();
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                    break;
+
                 case SHEEP:
                     Sheep sheep = (Sheep) target;
 
@@ -437,7 +477,7 @@ public class FishingManager extends SkillManager {
             }
 
             Misc.dropItem(target.getLocation(), drop);
-            CombatUtils.dealDamage(target, Math.max(target.getMaxHealth() / 4, 1)); // Make it so you can shake a mob no more than 4 times.
+            CombatUtils.dealDamage(target, Math.max(target.getMaxHealth() / 4, 1), getPlayer()); // Make it so you can shake a mob no more than 4 times.
             applyXpGain(ExperienceConfig.getInstance().getFishingShakeXP(), XPGainReason.PVE);
         }
     }
