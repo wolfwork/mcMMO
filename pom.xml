@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.gmail.nossr50.mcMMO</groupId>
     <artifactId>mcMMO</artifactId>
-    <version>1.5.02-SNAPSHOT</version>
+    <version>1.5.03-SNAPSHOT</version>
     <name>mcMMO</name>
     <url>https://github.com/mcMMO-Dev/mcMMO</url>
     <issueManagement>
@@ -36,6 +36,14 @@
                 <directory>${basedir}/src/main/resources/mods</directory>
                 <includes>
                     <include>*.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <targetPath>.</targetPath>
+                <filtering>true</filtering>
+                <directory>${basedir}</directory>
+                <includes>
+                    <include>LICENSE</include>
                 </includes>
             </resource>
         </resources>

@@ -272,7 +272,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 while ((line = in.readLine()) != null) {
                     // Read the line in and copy it to the output if it's not the player we want to edit
                     String[] character = line.split(":");
-                    if (!character[41].equalsIgnoreCase(uuid.toString()) && !character[0].equalsIgnoreCase(playerName)) {
+                    if (!(uuid != null && character[41].equalsIgnoreCase(uuid.toString())) && !character[0].equalsIgnoreCase(playerName)) {
                         writer.append(line).append("\r\n");
                     }
                     else {
@@ -319,7 +319,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         writer.append(mobHealthbarType == null ? Config.getInstance().getMobHealthbarDefault().toString() : mobHealthbarType.toString()).append(":");
                         writer.append(profile.getSkillLevel(SkillType.ALCHEMY)).append(":");
                         writer.append(profile.getSkillXpLevel(SkillType.ALCHEMY)).append(":");
-                        writer.append(uuid.toString()).append(":");
+                        writer.append(uuid != null ? uuid.toString() : "NULL").append(":");
                         writer.append(profile.getScoreboardTipsShown()).append(":");
                         writer.append("\r\n");
                     }
@@ -572,6 +572,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
     public boolean saveUserUUID(String userName, UUID uuid) {
         boolean worked = false;
 
+        int i = 0;
         BufferedReader in = null;
         FileWriter out = null;
         String usersFilePath = mcMMO.getUsersFilePath();
@@ -588,13 +589,14 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         if (character.length < 42) {
                             mcMMO.p.getLogger().severe("Could not update UUID for " + userName + "!");
                             mcMMO.p.getLogger().severe("Database entry is invalid.");
-                            break;
+                            continue;
                         }
 
                         line = line.replace(character[41], uuid.toString());
                         worked = true;
                     }
 
+                    i++;
                     writer.append(line).append("\r\n");
                 }
 
@@ -605,6 +607,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 mcMMO.p.getLogger().severe("Exception while reading " + usersFilePath + " (Are you sure you formatted it correctly?)" + e.toString());
             }
             finally {
+                mcMMO.p.getLogger().info(i + " entries written while saving UUID for " + userName);
                 if (in != null) {
                     try {
                         in.close();
@@ -631,6 +634,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
         BufferedReader in = null;
         FileWriter out = null;
         String usersFilePath = mcMMO.getUsersFilePath();
+        int i = 0;
 
         synchronized (fileWritingLock) {
             try {
@@ -638,9 +642,9 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 StringBuilder writer = new StringBuilder();
                 String line;
 
-                while (((line = in.readLine()) != null) && !fetchedUUIDs.isEmpty()) {
+                while (((line = in.readLine()) != null)) {
                     String[] character = line.split(":");
-                    if (fetchedUUIDs.containsKey(character[0])) {
+                    if (!fetchedUUIDs.isEmpty() && fetchedUUIDs.containsKey(character[0])) {
                         if (character.length < 42) {
                             mcMMO.p.getLogger().severe("Could not update UUID for " + character[0] + "!");
                             mcMMO.p.getLogger().severe("Database entry is invalid.");
@@ -651,6 +655,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         line = new StringBuilder(org.apache.commons.lang.StringUtils.join(character, ":")).append(":").toString();
                     }
 
+                    i++;
                     writer.append(line).append("\r\n");
                 }
 
@@ -661,6 +666,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 mcMMO.p.getLogger().severe("Exception while reading " + usersFilePath + " (Are you sure you formatted it correctly?)" + e.toString());
             }
             finally {
+                mcMMO.p.getLogger().info(i + " entries written while saving UUID batch");
                 if (in != null) {
                     try {
                         in.close();
