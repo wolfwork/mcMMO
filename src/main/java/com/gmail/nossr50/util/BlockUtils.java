@@ -15,7 +15,6 @@ import org.bukkit.material.SmoothBrick;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.skills.repair.Repair;
 import com.gmail.nossr50.skills.salvage.Salvage;
-import com.gmail.nossr50.util.temp.DualSupport;
 
 public final class BlockUtils {
     private BlockUtils() {}
@@ -48,6 +47,11 @@ public final class BlockUtils {
             case ENCHANTMENT_TABLE:
             case ENDER_CHEST:
             case FENCE_GATE:
+            case ACACIA_FENCE_GATE:
+            case DARK_OAK_FENCE_GATE:
+            case SPRUCE_FENCE_GATE:
+            case BIRCH_FENCE_GATE:
+            case JUNGLE_FENCE_GATE:
             case FURNACE:
             case IRON_DOOR_BLOCK:
             case JUKEBOX:
@@ -65,10 +69,23 @@ public final class BlockUtils {
             case HOPPER:
             case TRAPPED_CHEST:
             case IRON_DOOR:
+            case IRON_TRAPDOOR:
+            case ACACIA_DOOR:
+            case SPRUCE_DOOR:
+            case BIRCH_DOOR:
+            case JUNGLE_DOOR:
+            case DARK_OAK_DOOR:
+            case FENCE:
+            case ACACIA_FENCE:
+            case DARK_OAK_FENCE:
+            case BIRCH_FENCE:
+            case JUNGLE_FENCE:
+            case SPRUCE_FENCE:
+            case ARMOR_STAND:
                 return false;
 
             default:
-                return DualSupport.canActivateAbilities(blockState) && !isMcMMOAnvil(blockState) && !mcMMO.getModManager().isCustomAbilityBlock(blockState);
+                return !isMcMMOAnvil(blockState) && !mcMMO.getModManager().isCustomAbilityBlock(blockState);
         }
     }
 
@@ -92,6 +109,7 @@ public final class BlockUtils {
         switch (blockState.getType()) {
             case COBBLESTONE:
             case DIRT:
+            case GRASS_PATH:
                 return true;
 
             case SMOOTH_BRICK:
@@ -115,6 +133,8 @@ public final class BlockUtils {
         switch (blockState.getType()) {
             case BROWN_MUSHROOM:
             case CACTUS:
+            case CHORUS_PLANT:
+            case CHORUS_FLOWER:
             case DOUBLE_PLANT:
             case MELON_BLOCK:
             case LONG_GRASS:
@@ -127,10 +147,9 @@ public final class BlockUtils {
             case YELLOW_FLOWER:
                 return true;
 
+            case BEETROOT_BLOCK:
             case CARROT:
             case POTATO:
-                return blockState.getRawData() == CropState.RIPE.getData();
-
             case CROPS:
                 return ((Crops) blockState.getData()).getState() == CropState.RIPE;
 
@@ -153,6 +172,7 @@ public final class BlockUtils {
      */
     public static Boolean affectedBySuperBreaker(BlockState blockState) {
         switch (blockState.getType()) {
+            case END_BRICKS:
             case ENDER_STONE:
             case GLOWSTONE:
             case HARD_CLAY:
@@ -160,13 +180,20 @@ public final class BlockUtils {
             case NETHERRACK:
             case OBSIDIAN:
             case PACKED_ICE:
+            case PURPUR_BLOCK:
+            case PURPUR_PILLAR:
+            case PURPUR_SLAB:
+            case PURPUR_STAIRS:
             case SANDSTONE:
             case STAINED_CLAY:
             case STONE:
+            case PRISMARINE:
+            case RED_SANDSTONE:
+                
                 return true;
 
             default:
-                return DualSupport.affectedBySuperBreaker(blockState) || isOre(blockState) || mcMMO.getModManager().isCustomMiningBlock(blockState);
+                return isOre(blockState) || mcMMO.getModManager().isCustomMiningBlock(blockState);
         }
     }
 
@@ -181,6 +208,7 @@ public final class BlockUtils {
             case CLAY:
             case DIRT:
             case GRASS:
+            case GRASS_PATH:
             case GRAVEL:
             case MYCEL:
             case SAND:
@@ -257,6 +285,7 @@ public final class BlockUtils {
         switch (blockState.getType()) {
             case DIRT:
             case GRASS:
+            case GRASS_PATH:
             case SOIL:
                 return false;
 
@@ -291,6 +320,7 @@ public final class BlockUtils {
         switch (blockState.getType()) {
             case DIRT:
             case GRASS:
+            case GRASS_PATH:
                 return true;
 
             default:

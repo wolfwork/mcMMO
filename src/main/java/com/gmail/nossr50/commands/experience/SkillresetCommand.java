@@ -2,7 +2,9 @@ package com.gmail.nossr50.commands.experience;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -19,7 +21,6 @@ import com.gmail.nossr50.util.EventUtils;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.commands.CommandUtils;
 import com.gmail.nossr50.util.player.UserManager;
-
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 public class SkillresetCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        SkillType skill;
         switch (args.length) {
             case 1:
                 if (CommandUtils.noConsoleUsage(sender)) {
@@ -44,7 +46,14 @@ public class SkillresetCommand implements TabExecutor {
                     return true;
                 }
 
-                editValues((Player) sender, UserManager.getPlayer(sender.getName()).getProfile(), SkillType.getSkill(args[0]));
+                if (args[0].equalsIgnoreCase("all")) {
+                    skill = null;
+                }
+                else {
+                    skill = SkillType.getSkill(args[1]);
+                }
+
+                editValues((Player) sender, UserManager.getPlayer(sender.getName()).getProfile(), skill);
                 return true;
 
             case 2:
@@ -57,7 +66,6 @@ public class SkillresetCommand implements TabExecutor {
                     return true;
                 }
 
-                SkillType skill;
                 if (args[1].equalsIgnoreCase("all")) {
                     skill = null;
                 }
@@ -70,7 +78,12 @@ public class SkillresetCommand implements TabExecutor {
 
                 // If the mcMMOPlayer doesn't exist, create a temporary profile and check if it's present in the database. If it's not, abort the process.
                 if (mcMMOPlayer == null) {
-                    PlayerProfile profile = mcMMO.getDatabaseManager().loadPlayerProfile(playerName, false);
+                    UUID uuid = null;
+                    OfflinePlayer player = mcMMO.p.getServer().getOfflinePlayer(playerName);
+                    if (player != null) {
+                        uuid = player.getUniqueId();
+                    }
+                    PlayerProfile profile = mcMMO.getDatabaseManager().loadPlayerProfile(playerName, uuid, false);
 
                     if (CommandUtils.unloadedProfile(sender, profile)) {
                         return true;
@@ -134,7 +147,7 @@ public class SkillresetCommand implements TabExecutor {
     }
 
     private boolean validateArguments(CommandSender sender, String skillName) {
-        return !(CommandUtils.isInvalidSkill(sender, skillName) && !skillName.equalsIgnoreCase("all"));
+        return skillName.equalsIgnoreCase("all") || !CommandUtils.isInvalidSkill(sender, skillName);
     }
 
     protected static void handleSenderMessage(CommandSender sender, String playerName, SkillType skill) {

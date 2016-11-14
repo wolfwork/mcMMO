@@ -62,13 +62,7 @@ public final class Woodcutting {
             species = ((Tree) blockState.getData()).getSpecies();
         }
 
-        int xp = ExperienceConfig.getInstance().getWoodcuttingTreeXP(species);
-
-        if (species == TreeSpecies.JUNGLE && experienceGainMethod == ExperienceGainMethod.TREE_FELLER) {
-            xp *= 0.5;
-        }
-
-        return xp;
+        return ExperienceConfig.getInstance().getWoodcuttingTreeXP(species);
     }
 
     /**
@@ -78,7 +72,7 @@ public final class Woodcutting {
      */
     protected static void checkForDoubleDrop(BlockState blockState) {
         if (mcMMO.getModManager().isCustomLog(blockState) && mcMMO.getModManager().getBlock(blockState).isDoubleDropEnabled()) {
-            Misc.dropItems(blockState.getLocation(), blockState.getBlock().getDrops());
+            Misc.dropItems(Misc.getBlockCenter(blockState), blockState.getBlock().getDrops());
         }
         else {
             //TODO Remove this workaround when casting to Tree works again
@@ -86,9 +80,18 @@ public final class Woodcutting {
             if (blockState.getData() instanceof Tree) {
                 species = ((Tree) blockState.getData()).getSpecies();
             }
+            if (blockState.getType() == Material.LOG_2) {
+                byte data = blockState.getRawData();
+                if ((data & 1) != 0) {
+                    species = TreeSpecies.ACACIA;
+                }
+                if ((data & 2) != 0) {
+                    species = TreeSpecies.DARK_OAK;
+                }
+            }
 
             if (Config.getInstance().getWoodcuttingDoubleDropsEnabled(species)) {
-                Misc.dropItems(blockState.getLocation(), blockState.getBlock().getDrops());
+                Misc.dropItems(Misc.getBlockCenter(blockState), blockState.getBlock().getDrops());
             }
         }
     }

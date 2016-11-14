@@ -9,8 +9,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.config.ConfigLoader;
@@ -28,7 +31,7 @@ public class PotionConfig extends ConfigLoader {
     private List<ItemStack> concoctionsIngredientsTierSeven = new ArrayList<ItemStack>();
     private List<ItemStack> concoctionsIngredientsTierEight = new ArrayList<ItemStack>();
 
-    private Map<Short, AlchemyPotion> potionMap = new HashMap<Short, AlchemyPotion>();
+    private Map<String, AlchemyPotion> potionMap = new HashMap<String, AlchemyPotion>();
 
     private PotionConfig() {
         super("potions.yml");
@@ -90,11 +93,11 @@ public class PotionConfig extends ConfigLoader {
         int pass = 0;
         int fail = 0;
 
-        for (String dataValue : potionSection.getKeys(false)) {
-            AlchemyPotion potion = loadPotion(potionSection.getConfigurationSection(dataValue));
+        for (String potionName : potionSection.getKeys(false)) {
+            AlchemyPotion potion = loadPotion(potionSection.getConfigurationSection(potionName));
 
             if (potion != null) {
-                potionMap.put(potion.getDataValue(), potion);
+                potionMap.put(potionName, potion);
                 pass++;
             }
             else {
@@ -115,11 +118,27 @@ public class PotionConfig extends ConfigLoader {
      */
     private AlchemyPotion loadPotion(ConfigurationSection potion_section) {
         try {
-            short dataValue = Short.parseShort(potion_section.getName());
+            
 
             String name = potion_section.getString("Name");
             if (name != null) {
                 name = ChatColor.translateAlternateColorCodes('&', name);
+            }
+            
+            PotionData data;
+            if (!potion_section.contains("PotionData")) { // Backwards config compatability
+                short dataValue = Short.parseShort(potion_section.getName());
+                Potion potion = Potion.fromDamage(dataValue);
+                data = new PotionData(potion.getType(), potion.hasExtendedDuration(), potion.getLevel() == 2);
+            } else {
+                ConfigurationSection potionData = potion_section.getConfigurationSection("PotionData");
+                data = new PotionData(PotionType.valueOf(potionData.getString("PotionType", "WATER")), potionData.getBoolean("Extended", false), potionData.getBoolean("Upgraded", false));
+            }
+            
+            Material material = Material.POTION;
+            String mat = potion_section.getString("Material", null);
+            if (mat != null) {
+                material = Material.valueOf(mat);
             }
 
             List<String> lore = new ArrayList<String>();
@@ -147,12 +166,12 @@ public class PotionConfig extends ConfigLoader {
                 }
             }
 
-            Map<ItemStack, Short> children = new HashMap<ItemStack, Short>();
+            Map<ItemStack, String> children = new HashMap<ItemStack, String>();
             if (potion_section.contains("Children")) {
                 for (String child : potion_section.getConfigurationSection("Children").getKeys(false)) {
                     ItemStack ingredient = loadIngredient(child);
                     if (ingredient != null) {
-                        children.put(ingredient, Short.parseShort(potion_section.getConfigurationSection("Children").getString(child)));
+                        children.put(ingredient, potion_section.getConfigurationSection("Children").getString(child));
                     }
                     else {
                         mcMMO.p.getLogger().warning("Failed to parse child for potion " + name + ": " + child);
@@ -160,7 +179,7 @@ public class PotionConfig extends ConfigLoader {
                 }
             }
 
-            return new AlchemyPotion(dataValue, name, lore, effects, children);
+            return new AlchemyPotion(material, data, name, lore, effects, children);
         }
         catch (Exception e) {
             mcMMO.p.getLogger().warning("Failed to load Alchemy potion: " + potion_section.getName());
@@ -217,10 +236,19 @@ public class PotionConfig extends ConfigLoader {
     }
 
     public boolean isValidPotion(ItemStack item) {
-        return potionMap.containsKey(item.getDurability());
+        return getPotion(item) != null;
     }
 
-    public AlchemyPotion getPotion(short durability) {
-        return potionMap.get(durability);
+    public AlchemyPotion getPotion(String name) {
+        return potionMap.get(name);
+    }
+    
+    public AlchemyPotion getPotion(ItemStack item) {
+        for (AlchemyPotion potion : potionMap.values()) {
+            if (potion.isSimilar(item)) {
+                return potion;
+            }
+        }
+        return null;
     }
 }

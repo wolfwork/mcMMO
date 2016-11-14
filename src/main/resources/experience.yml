@@ -151,10 +151,13 @@ Experience:
     Herbalism:
         Allium: 300
         Azure_Bluet: 150
+        Beetroot_Block: 50
         Blue_Orchid: 150
         Brown_Mushroom: 150
         Cactus: 30
         Carrot: 50
+        Chorus_Flower: 25
+        Chorus_Plant: 1
         Cocoa: 30
         Crops: 50
         Dead_Bush: 30
@@ -185,6 +188,7 @@ Experience:
         Coal_Ore: 100
         Diamond_Ore: 750
         Emerald_Ore: 1000
+        End_Bricks: 200
         Ender_Stone: 150
         Glowstone: 30
         Gold_Ore: 350
@@ -202,6 +206,10 @@ Experience:
         Stone: 30
         Red_Sandstone: 100
         Prismarine: 70
+        Purpur_Block: 200
+        Purpur_Pillar: 250
+        Purpur_Slab: 150
+        Purpur_Stairs: 250
     Repair:
         Base: 1000.0
         Wood: 0.6
@@ -250,3 +258,4 @@ Experience:
             Endermite: 2.0
             Guardian: 3.0
             Elder_Guardian: 4.0
+            Shulker: 2.0

@@ -40,7 +40,7 @@ public class MiningManager extends SkillManager {
     public boolean canDetonate() {
         Player player = getPlayer();
 
-        return canUseBlastMining() && player.isSneaking() && player.getItemInHand().getType() == BlastMining.detonator && Permissions.remoteDetonation(player);
+        return canUseBlastMining() && player.isSneaking() && player.getInventory().getItemInMainHand().getType() == BlastMining.detonator && Permissions.remoteDetonation(player);
     }
 
     public boolean canUseBlastMining() {
@@ -68,14 +68,14 @@ public class MiningManager extends SkillManager {
         Material material = blockState.getType();
 
         if (mcMMOPlayer.getAbilityMode(skill.getAbility())) {
-            SkillUtils.handleDurabilityChange(getPlayer().getItemInHand(), Config.getInstance().getAbilityToolDamage());
+            SkillUtils.handleDurabilityChange(getPlayer().getInventory().getItemInMainHand(), Config.getInstance().getAbilityToolDamage());
         }
 
         if ((mcMMO.getModManager().isCustomMiningBlock(blockState) && !mcMMO.getModManager().getBlock(blockState).isDoubleDropEnabled()) || material != Material.GLOWING_REDSTONE_ORE && !Config.getInstance().getDoubleDropsEnabled(skill, material)) {
             return;
         }
 
-        boolean silkTouch = player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH);
+        boolean silkTouch = player.getInventory().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH);
 
         for (int i = mcMMOPlayer.getAbilityMode(skill.getAbility()) ? 2 : 1; i != 0; i--) {
             if (SkillUtils.activationSuccessful(SecondaryAbility.MINING_DOUBLE_DROPS, getPlayer(), getSkillLevel(), activationChance)) {
@@ -148,7 +148,7 @@ public class MiningManager extends SkillManager {
                     xp += Mining.getBlockXp(blockState);
                 }
 
-                Misc.dropItem(blockState.getLocation(), blockState.getData().toItemStack(1)); // Initial block that would have been dropped
+                Misc.dropItem(Misc.getBlockCenter(blockState), blockState.getData().toItemStack(1)); // Initial block that would have been dropped
 
                 if (!mcMMO.getPlaceStore().isTrue(blockState)) {
                     for (int i = 1; i < dropMultiplier; i++) {
@@ -161,7 +161,7 @@ public class MiningManager extends SkillManager {
         if (debrisYield > 0) {
             for (BlockState blockState : debris) {
                 if (Misc.getRandom().nextFloat() < debrisYield) {
-                    Misc.dropItems(blockState.getLocation(), blockState.getBlock().getDrops());
+                    Misc.dropItems(Misc.getBlockCenter(blockState), blockState.getBlock().getDrops());
                 }
             }
         }

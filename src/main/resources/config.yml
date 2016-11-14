@@ -20,6 +20,8 @@ General:
     Update_Check: true
     Prefer_Beta: false
     Power_Level_Cap: 0
+    # Should mcMMO truncate levels if you lower your max level cap for a skillname
+    TruncateSkills: false
     # Should mcMMO print out debug messages?
     Verbose_Logging: false
     # Should mcMMO over-write configs to update, or make new ones ending in .new?
@@ -406,7 +408,9 @@ Skills:
 ###
 Double_Drops:
     Herbalism:
+        Beetroot_Block: true
         Brown_Mushroom: true
+        Beetroot_Block: true
         Cactus: true
         Carrot: true
         Cocoa: true
@@ -500,3 +504,10 @@ Particles:
     # this will happen by default for every 100 levels.
     LevelUp_Enabled: true
     LevelUp_Tier: 100
+#
+#  Settings for sounds
+###
+Sounds:
+    # This setting controls the master volume. 1.0 is Max,  0 would be off
+    MasterVolume: 1.0
+    

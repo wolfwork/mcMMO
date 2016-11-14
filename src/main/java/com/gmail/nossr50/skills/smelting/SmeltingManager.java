@@ -25,8 +25,10 @@ import com.gmail.nossr50.skills.SkillManager;
 import com.gmail.nossr50.skills.mining.Mining;
 import com.gmail.nossr50.skills.smelting.Smelting.Tier;
 import com.gmail.nossr50.util.BlockUtils;
+import com.gmail.nossr50.util.EventUtils;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.skills.ParticleEffectUtils;
 import com.gmail.nossr50.util.skills.SkillUtils;
 
@@ -73,18 +75,22 @@ public class SmeltingManager extends SkillManager {
             if (item == null) {
                 return false;
             }
+            
+            if (!EventUtils.simulateBlockBreak(blockState.getBlock(), player, true)) {
+                return false;
+            }
 
             // We need to distribute Mining XP here, because the block break event gets cancelled
             applyXpGain(Mining.getBlockXp(blockState), XPGainReason.PVE);
 
-            SkillUtils.handleDurabilityChange(getPlayer().getItemInHand(), Config.getInstance().getAbilityToolDamage());
+            SkillUtils.handleDurabilityChange(getPlayer().getInventory().getItemInMainHand(), Config.getInstance().getAbilityToolDamage());
 
-            Misc.dropItems(blockState.getLocation(), item, isSecondSmeltSuccessful() ? 2 : 1);
+            Misc.dropItems(Misc.getBlockCenter(blockState), item, isSecondSmeltSuccessful() ? 2 : 1);
 
             blockState.setType(Material.AIR);
 
             if (Config.getInstance().getFluxPickaxeSoundEnabled()) {
-                player.playSound(blockState.getLocation(), Sound.FIZZ, Misc.FIZZ_VOLUME, Misc.getFizzPitch());
+                player.playSound(blockState.getLocation(), SoundAdapter.FIZZ, Misc.FIZZ_VOLUME, Misc.getFizzPitch());
             }
 
             ParticleEffectUtils.playFluxEffect(blockState.getLocation());
@@ -100,7 +106,7 @@ public class SmeltingManager extends SkillManager {
         ItemMeta itemMeta = itemStack.getItemMeta();
         itemMeta.setDisplayName(ChatColor.GOLD + LocaleLoader.getString("Item.FluxPickaxe.Name"));
 
-        List<String> itemLore = new ArrayList<String>();
+        List<String> itemLore = itemMeta.hasLore() ? itemMeta.getLore() : new ArrayList<String>();
         itemLore.add("mcMMO Item");
         itemLore.add(LocaleLoader.getString("Item.FluxPickaxe.Lore.1"));
         itemLore.add(LocaleLoader.getString("Item.FluxPickaxe.Lore.2", Smelting.fluxMiningUnlockLevel));

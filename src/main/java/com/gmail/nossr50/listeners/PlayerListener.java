@@ -62,8 +62,10 @@ import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.MobHealthbarUtils;
 import com.gmail.nossr50.util.Motd;
 import com.gmail.nossr50.util.Permissions;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.SkillUtils;
+import org.bukkit.inventory.EquipmentSlot;
 
 public class PlayerListener implements Listener {
     private final mcMMO plugin;
@@ -325,7 +327,7 @@ public class PlayerListener implements Listener {
             event.setCancelled(ShareHandler.handleItemShare(drop, mcMMOPlayer));
 
             if (event.isCancelled()) {
-                player.playSound(player.getLocation(), Sound.ITEM_PICKUP, Misc.POP_VOLUME, Misc.getPopPitch());
+                player.playSound(player.getLocation(), SoundAdapter.ITEM_PICKUP, Misc.POP_VOLUME, Misc.getPopPitch());
                 return;
             }
         }
@@ -336,7 +338,7 @@ public class PlayerListener implements Listener {
             event.setCancelled(cancel);
 
             if (pickupSuccess) {
-                player.playSound(player.getLocation(), Sound.ITEM_PICKUP, Misc.POP_VOLUME, Misc.getPopPitch());
+                player.playSound(player.getLocation(), SoundAdapter.ITEM_PICKUP, Misc.POP_VOLUME, Misc.getPopPitch());
                 player.updateInventory();
                 return;
             }
@@ -390,11 +392,6 @@ public class PlayerListener implements Listener {
         if (plugin.isXPEventEnabled()) {
             player.sendMessage(LocaleLoader.getString("XPRate.Event", ExperienceConfig.getInstance().getExperienceGainsGlobalMultiplier()));
         }
-
-        if (Permissions.updateNotifications(player) && plugin.isUpdateAvailable()) {
-            player.sendMessage(LocaleLoader.getString("UpdateChecker.Outdated"));
-            player.sendMessage(LocaleLoader.getString("UpdateChecker.NewAvailable"));
-        }
     }
 
     /**
@@ -426,14 +423,14 @@ public class PlayerListener implements Listener {
     public void onPlayerInteractLowest(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!UserManager.hasPlayerDataKey(player) || player.getGameMode() == GameMode.CREATIVE) {
+        if (event.getHand() != EquipmentSlot.HAND || !UserManager.hasPlayerDataKey(player) || player.getGameMode() == GameMode.CREATIVE) {
             return;
         }
 
         McMMOPlayer mcMMOPlayer = UserManager.getPlayer(player);
         MiningManager miningManager = mcMMOPlayer.getMiningManager();
         Block block = event.getClickedBlock();
-        ItemStack heldItem = player.getItemInHand();
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
 
         switch (event.getAction()) {
             case RIGHT_CLICK_BLOCK:
@@ -479,7 +476,7 @@ public class PlayerListener implements Listener {
             case LEFT_CLICK_BLOCK:
                 type = block.getType();
 
-                if ((Config.getInstance().getAbilitiesOnlyActivateWhenSneaking() && player.isSneaking()) || !Config.getInstance().getAbilitiesOnlyActivateWhenSneaking()) {
+                if (!Config.getInstance().getAbilitiesOnlyActivateWhenSneaking() || player.isSneaking()) {
                     /* REPAIR CHECKS */
                     if (type == Repair.anvilMaterial && SkillType.REPAIR.getPermissions(player) && mcMMO.getRepairableManager().isRepairable(heldItem)) {
                         RepairManager repairManager = mcMMOPlayer.getRepairManager();
@@ -518,15 +515,19 @@ public class PlayerListener implements Listener {
     public void onPlayerInteractMonitor(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!UserManager.hasPlayerDataKey(player) || player.getGameMode() == GameMode.CREATIVE) {
+        if (event.getHand() != EquipmentSlot.HAND || !UserManager.hasPlayerDataKey(player) || player.getGameMode() == GameMode.CREATIVE) {
             return;
         }
 
         McMMOPlayer mcMMOPlayer = UserManager.getPlayer(player);
-        ItemStack heldItem = player.getItemInHand();
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
 
         switch (event.getAction()) {
             case RIGHT_CLICK_BLOCK:
+                if(player.getInventory().getItemInOffHand().getType() != Material.AIR && !player.isInsideVehicle() && !player.isSneaking()) {
+                    break;
+                }
+                
                 Block block = event.getClickedBlock();
                 BlockState blockState = block.getState();
 
@@ -552,7 +553,7 @@ public class PlayerListener implements Listener {
                 HerbalismManager herbalismManager = mcMMOPlayer.getHerbalismManager();
 
                 if (herbalismManager.canGreenThumbBlock(blockState)) {
-                    player.setItemInHand(new ItemStack(Material.SEEDS, heldItem.getAmount() - 1));
+                    player.getInventory().setItemInMainHand(new ItemStack(Material.SEEDS, heldItem.getAmount() - 1));
 
                     if (herbalismManager.processGreenThumbBlocks(blockState) && EventUtils.simulateBlockBreak(block, player, false)) {
                         blockState.update(true);
@@ -561,6 +562,7 @@ public class PlayerListener implements Listener {
 
                 /* SHROOM THUMB CHECK */
                 else if (herbalismManager.canUseShroomThumb(blockState)) {
+                    event.setCancelled(true);
                     if (herbalismManager.processShroomThumb(blockState) && EventUtils.simulateBlockBreak(block, player, false)) {
                         blockState.update(true);
                     }
@@ -568,7 +570,10 @@ public class PlayerListener implements Listener {
                 break;
 
             case RIGHT_CLICK_AIR:
-
+                if(player.getInventory().getItemInOffHand().getType() != Material.AIR && !player.isInsideVehicle() && !player.isSneaking()) {
+                    break;
+                }
+                
                 /* ACTIVATION CHECKS */
                 if (Config.getInstance().getAbilitiesEnabled()) {
                     mcMMOPlayer.processAbilityActivation(SkillType.AXES);

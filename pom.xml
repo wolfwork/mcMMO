@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.gmail.nossr50.mcMMO</groupId>
     <artifactId>mcMMO</artifactId>
-    <version>1.5.03-SNAPSHOT</version>
+    <version>1.5.07-SNAPSHOT</version>
     <name>mcMMO</name>
     <url>https://github.com/mcMMO-Dev/mcMMO</url>
     <issueManagement>
@@ -83,17 +83,12 @@
                 <configuration>
                     <artifactSet>
                         <includes>
-                            <include>com.turt2live.metrics:MetricsExtension</include>
                             <include>commons-logging:commons-logging</include>
                             <include>org.apache.tomcat:tomcat-jdbc</include>
                             <include>org.apache.tomcat:tomcat-juli</include>
                         </includes>
                     </artifactSet>
                     <relocations>
-                        <relocation>
-                            <pattern>com.turt2live.metrics</pattern>
-                            <shadedPattern>com.gmail.nossr50.metrics.mcstats</shadedPattern>
-                        </relocation>
                         <relocation>
                             <pattern>org.apache.commons.logging</pattern>
                             <shadedPattern>com.gmail.nossr50.commons.logging</shadedPattern>
@@ -140,8 +135,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.8-R0.1-SNAPSHOT</version>
-            <type>jar</type>
+            <version>1.10-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -149,11 +143,6 @@
             <artifactId>junit-dep</artifactId>
             <version>4.10</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.turt2live.metrics</groupId>
-            <artifactId>MetricsExtension</artifactId>
-            <version>0.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat</groupId>

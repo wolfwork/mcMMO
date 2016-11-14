@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.NPC;
@@ -13,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.config.Config;
 import com.gmail.nossr50.events.items.McMMOItemSpawnEvent;
 import com.gmail.nossr50.runnables.player.PlayerProfileLoadingTask;
 import com.gmail.nossr50.util.player.UserManager;
@@ -30,14 +32,14 @@ public final class Misc {
 
     // Sound Pitches & Volumes from CB
     public static final float ANVIL_USE_PITCH  = 0.3F;  // Not in CB directly, I went off the place sound values
-    public static final float ANVIL_USE_VOLUME = 1.0F;  // Not in CB directly, I went off the place sound values
-    public static final float FIZZ_VOLUME      = 0.5F;
-    public static final float POP_VOLUME       = 0.2F;
-    public static final float BAT_VOLUME       = 1.0F;
+    public static final float ANVIL_USE_VOLUME = 1.0F * Config.getInstance().getMasterVolume();  // Not in CB directly, I went off the place sound values
+    public static final float FIZZ_VOLUME      = 0.5F * Config.getInstance().getMasterVolume();
+    public static final float POP_VOLUME       = 0.2F * Config.getInstance().getMasterVolume();
+    public static final float BAT_VOLUME       = 1.0F * Config.getInstance().getMasterVolume();
     public static final float BAT_PITCH        = 0.6F;
-    public static final float GHAST_VOLUME     = 1.0F;
+    public static final float GHAST_VOLUME     = 1.0F * Config.getInstance().getMasterVolume();
     public static final float LEVELUP_PITCH    = 0.5F;  // Reduced to differentiate between vanilla level-up
-    public static final float LEVELUP_VOLUME   = 0.75F; // Use max volume always
+    public static final float LEVELUP_VOLUME   = 0.75F * Config.getInstance().getMasterVolume(); // Use max volume always
 
     public static final Set<String> modNames = ImmutableSet.of("LOTR", "BUILDCRAFT", "ENDERIO", "ENHANCEDBIOMES", "IC2", "METALLURGY", "FORESTRY", "GALACTICRAFT", "RAILCRAFT", "TWILIGHTFOREST", "THAUMCRAFT", "GRAVESTONEMOD", "GROWTHCRAFT", "ARCTICMOBS", "DEMONMOBS", "INFERNOMOBS", "SWAMPMOBS", "MARICULTURE", "MINESTRAPPOLATION");
 
@@ -69,6 +71,16 @@ public final class Misc {
      */
     public static boolean isNear(Location first, Location second, double maxDistance) {
         return (first.getWorld() == second.getWorld()) && (first.distanceSquared(second) < (maxDistance * maxDistance) || maxDistance == 0);
+    }
+
+    /**
+     * Get the center of the given block.
+     * 
+     * @param blockState The {@link BlockState} of the block
+     * @return A {@link Location} lying at the center of the block
+     */
+    public static Location getBlockCenter(BlockState blockState) {
+        return blockState.getLocation().add(0.5, 0.5, 0.5);
     }
 
     public static void dropItems(Location location, Collection<ItemStack> drops) {

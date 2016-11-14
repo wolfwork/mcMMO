@@ -9,8 +9,13 @@ import org.bukkit.material.SmoothBrick;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.config.AdvancedConfig;
 import com.gmail.nossr50.util.skills.SkillUtils;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 public class Herbalism {
+
     public static int farmersDietRankLevel1 = AdvancedConfig.getInstance().getFarmerDietRankChange();
     public static int farmersDietRankLevel2 = farmersDietRankLevel1 * 2;
     public static int farmersDietMaxLevel   = farmersDietRankLevel1 * 5;
@@ -21,56 +26,129 @@ public class Herbalism {
     /**
      * Convert blocks affected by the Green Thumb & Green Terra abilities.
      *
-     * @param blockState The {@link BlockState} to check ability activation for
+     * @param blockState
+     *            The {@link BlockState} to check ability activation for
      * @return true if the ability was successful, false otherwise
      */
     protected static boolean convertGreenTerraBlocks(BlockState blockState) {
         switch (blockState.getType()) {
-            case COBBLE_WALL:
+            case COBBLE_WALL :
                 blockState.setRawData((byte) 0x1);
                 return true;
 
-            case SMOOTH_BRICK:
+            case SMOOTH_BRICK :
                 ((SmoothBrick) blockState.getData()).setMaterial(Material.MOSSY_COBBLESTONE);
                 return true;
 
-            case DIRT:
+            case DIRT :
+            case GRASS_PATH :
                 blockState.setType(Material.GRASS);
                 return true;
 
-            case COBBLESTONE:
+            case COBBLESTONE :
                 blockState.setType(Material.MOSSY_COBBLESTONE);
                 return true;
 
-            default:
+            default :
                 return false;
         }
     }
 
+    public static HashSet<Block> findChorusPlant(Block target) {
+        return findChorusPlant(target, new HashSet<Block>());
+    }
+
+    private static HashSet<Block> findChorusPlant(Block target, HashSet<Block> traversed) {
+        if (target.getType() != Material.CHORUS_PLANT) {
+            return traversed;
+        }
+        // Prevent any infinite loops, who needs more than 64 chorus anyways
+        if (traversed.size() > 64)
+        {
+            return traversed;
+        }
+
+        traversed.add(target);
+
+        Block relative = target.getRelative(BlockFace.UP, 1);
+        if (!traversed.contains(relative)) {
+            if (relative.getType() == Material.CHORUS_PLANT) {
+                traversed.addAll(findChorusPlant(relative, traversed));
+            }
+        }
+
+        relative = target.getRelative(BlockFace.NORTH, 1);
+        if (!traversed.contains(relative)) {
+            if (relative.getType() == Material.CHORUS_PLANT) {
+                traversed.addAll(findChorusPlant(relative, traversed));
+            }
+        }
+
+        relative = target.getRelative(BlockFace.SOUTH, 1);
+        if (!traversed.contains(relative)) {
+            if (relative.getType() == Material.CHORUS_PLANT) {
+                traversed.addAll(findChorusPlant(relative, traversed));
+            }
+        }
+
+        relative = target.getRelative(BlockFace.EAST, 1);
+        if (!traversed.contains(relative)) {
+            if (relative.getType() == Material.CHORUS_PLANT) {
+                traversed.addAll(findChorusPlant(relative, traversed));
+            }
+        }
+
+        relative = target.getRelative(BlockFace.WEST, 1);
+        if (!traversed.contains(relative)) {
+            if (relative.getType() == Material.CHORUS_PLANT) {
+                traversed.addAll(findChorusPlant(relative, traversed));
+            }
+        }
+
+        return traversed;
+    }
+
     /**
-     * Calculate the drop amounts for cacti & sugar cane based on the blocks above them.
+     * Calculate the drop amounts for multi block plants based on the blocks
+     * relative to them.
      *
-     * @param blockState The {@link BlockState} of the bottom block of the plant
+     * @param blockState
+     *            The {@link BlockState} of the bottom block of the plant
      * @return the number of bonus drops to award from the blocks in this plant
      */
-    protected static int calculateCatciAndSugarDrops(BlockState blockState) {
+    protected static int calculateMultiBlockPlantDrops(BlockState blockState) {
         Block block = blockState.getBlock();
         Material blockType = blockState.getType();
         int dropAmount = mcMMO.getPlaceStore().isTrue(block) ? 0 : 1;
 
-        // Handle the two blocks above it - cacti & sugar cane can only grow 3 high naturally
-        for (int y = 1; y < 3; y++) {
-            Block relativeBlock = block.getRelative(BlockFace.UP, y);
+        if (blockType == Material.CHORUS_PLANT) {
+            dropAmount = 1;
 
-            if (relativeBlock.getType() != blockType) {
-                break;
-            }
+            if (block.getRelative(BlockFace.DOWN, 1).getType() == Material.ENDER_STONE) {
+                HashSet<Block> blocks = findChorusPlant(block);
 
-            if (mcMMO.getPlaceStore().isTrue(relativeBlock)) {
-                mcMMO.getPlaceStore().setFalse(relativeBlock);
+                dropAmount = blocks.size();
+
+                /*
+                 * for(Block b : blocks) {
+                 * b.breakNaturally();
+                 * }
+                 */
             }
-            else {
-                dropAmount++;
+        } else {
+            // Handle the two blocks above it - cacti & sugar cane can only grow 3 high naturally
+            for (int y = 1; y < 3; y++) {
+                Block relativeBlock = block.getRelative(BlockFace.UP, y);
+
+                if (relativeBlock.getType() != blockType) {
+                    break;
+                }
+
+                if (mcMMO.getPlaceStore().isTrue(relativeBlock)) {
+                    mcMMO.getPlaceStore().setFalse(relativeBlock);
+                } else {
+                    dropAmount++;
+                }
             }
         }
 
@@ -80,17 +158,19 @@ public class Herbalism {
     /**
      * Convert blocks affected by the Green Thumb & Green Terra abilities.
      *
-     * @param blockState The {@link BlockState} to check ability activation for
+     * @param blockState
+     *            The {@link BlockState} to check ability activation for
      * @return true if the ability was successful, false otherwise
      */
     protected static boolean convertShroomThumb(BlockState blockState) {
         switch (blockState.getType()) {
-            case DIRT:
-            case GRASS:
+            case DIRT :
+            case GRASS :
+            case GRASS_PATH :
                 blockState.setType(Material.MYCEL);
                 return true;
 
-            default:
+            default :
                 return false;
         }
     }
@@ -98,7 +178,8 @@ public class Herbalism {
     /**
      * Check if the block has a recently grown crop from Green Thumb
      *
-     * @param blockState The {@link BlockState} to check green thumb regrown for
+     * @param blockState
+     *            The {@link BlockState} to check green thumb regrown for
      * @return true if the block is recently regrown, false otherwise
      */
     public static boolean isRecentlyRegrown(BlockState blockState) {

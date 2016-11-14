@@ -10,6 +10,7 @@ import org.bukkit.entity.Animals;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Guardian;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -47,8 +48,6 @@ import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.MobHealthbarUtils;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.player.UserManager;
-import com.gmail.nossr50.util.temp.CompatableGuardianXP;
-
 import com.google.common.collect.ImmutableMap;
 
 public final class CombatUtils {
@@ -215,7 +214,7 @@ public final class CombatUtils {
                 return;
             }
 
-            ItemStack heldItem = player.getItemInHand();
+            ItemStack heldItem = player.getInventory().getItemInMainHand();
 
             if (target instanceof Tameable) {
                 if (heldItem.getType() == Material.BONE) {
@@ -309,7 +308,7 @@ public final class CombatUtils {
                 event.setDamage(acrobaticsManager.dodgeCheck(event.getDamage()));
             }
 
-            if (ItemUtils.isSword(player.getItemInHand())) {
+            if (ItemUtils.isSword(player.getInventory().getItemInMainHand())) {
                 if (!SkillType.SWORDS.shouldProcess(target)) {
                     return;
                 }
@@ -387,7 +386,7 @@ public final class CombatUtils {
      * @param type The type of skill being used
      */
     public static void applyAbilityAoE(Player attacker, LivingEntity target, double damage, Map<DamageModifier, Double> modifiers, SkillType type) {
-        int numberOfTargets = getTier(attacker.getItemInHand()); // The higher the weapon tier, the more targets you hit
+        int numberOfTargets = getTier(attacker.getInventory().getItemInMainHand()); // The higher the weapon tier, the more targets you hit
         double damageAmount = Math.max(damage, 1);
 
         for (Entity entity : target.getNearbyEntities(2.5, 2.5, 2.5)) {
@@ -467,6 +466,7 @@ public final class CombatUtils {
                 switch (type) {
                     case BAT:
                     case SQUID:
+                    case RABBIT:
                         baseXP = ExperienceConfig.getInstance().getAnimalsXP();
                         break;
 
@@ -475,18 +475,20 @@ public final class CombatUtils {
                     case CREEPER:
                     case ENDER_DRAGON:
                     case ENDERMAN:
+                    case ENDERMITE:
                     case GHAST:
                     case GIANT:
                     case MAGMA_CUBE:
                     case PIG_ZOMBIE:
+                    case SHULKER:
                     case SILVERFISH:
                     case SLIME:
                     case SPIDER:
                     case WITCH:
                     case WITHER:
                     case ZOMBIE:
-                    case ENDERMITE:
                         baseXP = ExperienceConfig.getInstance().getCombatXP(type);
+                        
                         break;
 
                     case SKELETON:
@@ -506,19 +508,15 @@ public final class CombatUtils {
                         }
                         break;
 
-                    default:
-                        if (type.name().equals("RABBIT")) {
-                            baseXP = ExperienceConfig.getInstance().getAnimalsXP();
-                            break;
-                        }
-                        if (type.name().equals("ENDERMITE")) {
+                    case GUARDIAN:
+                        if (((Guardian) target).isElder()) {
+                            baseXP = ExperienceConfig.getInstance().getElderGuardianXP();
+                        } else {
                             baseXP = ExperienceConfig.getInstance().getCombatXP(type);
-                            break;
                         }
-                        if (type.name().equals("GUARDIAN")) {
-                            baseXP = CompatableGuardianXP.get(target);
-                            break;
-                        }
+                        break;
+
+                    default:
                         baseXP = 1.0;
                         mcMMO.getModManager().addCustomEntity(target);
                         break;

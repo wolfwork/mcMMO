@@ -12,8 +12,7 @@ description: >
 
 author: nossr50
 authors: [GJ, NuclearW, bm01, Glitchfinder, TfT_02, t00thpick1, Riking]
-website: http://dev.bukkit.org/server-mods/mcmmo/
-
+website: www.spigotmc.org/resources/mcmmo.2445/
 main: com.gmail.nossr50.mcMMO
 softdepend: [CombatTag, HealthBar]
 load: STARTUP
@@ -112,6 +111,8 @@ commands:
     mobhealth:
         aliases: [mcmobhealth]
         description: Change the style of the mob healthbar
+    mhd:
+        description: Sets all players mob health settings to default
     mcscoreboard:
         aliases: [mcsb]
         description: Manage your mcMMO Scoreboard
@@ -339,6 +340,7 @@ permissions:
             mcmmo.ability.herbalism.greenthumb.plants.crops: true
             mcmmo.ability.herbalism.greenthumb.plants.netherwarts: true
             mcmmo.ability.herbalism.greenthumb.plants.potato: true
+            mcmmo.ability.herbalism.greenthumb.plants.beetroot: true
     mcmmo.ability.herbalism.greenthumb.plants.carrot:
         description: Allows access to the Green Thumb ability for carrots
     mcmmo.ability.herbalism.greenthumb.plants.cocoa:
@@ -349,6 +351,8 @@ permissions:
         description: Allows access to the Green Thumb ability for netherwart
     mcmmo.ability.herbalism.greenthumb.plants.potato:
         description: Allows access to the Green Thumb ability for potatoes
+    mcmmo.ability.herbalism.greenthumb.plants.beetroot:
+        description: Allows access to the Green Thumb ability for beetrootes
     mcmmo.ability.herbalism.hylianluck:
         description: Allows access to the Hylian Luck ability
     mcmmo.ability.herbalism.shroomthumb:
@@ -948,6 +952,9 @@ permissions:
         description: Allows access to the mmoshowdb command
     mcmmo.commands.mobhealth:
          description: Allows access to the mobhealth command
+    mcmmo.commands.mhd:
+        default: false
+        description: Allows access to the mhd command
     mcmmo.commands.party.*:
         default: false
         description: Implies access to all mcmmo.commands.party permissions.

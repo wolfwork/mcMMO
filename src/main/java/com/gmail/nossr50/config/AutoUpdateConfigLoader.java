@@ -6,13 +6,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import com.gmail.nossr50.metrics.MetricsManager;
 
 public abstract class AutoUpdateConfigLoader extends ConfigLoader {
     public AutoUpdateConfigLoader(String relativePath, String fileName) {
@@ -71,7 +70,7 @@ public abstract class AutoUpdateConfigLoader extends ConfigLoader {
             try {
                 // Read internal
                 BufferedReader reader = new BufferedReader(new InputStreamReader(plugin.getResource(fileName)));
-                HashMap<String, String> comments = new HashMap<String, String>();
+                LinkedHashMap<String, String> comments = new LinkedHashMap<String, String>();
                 String temp = "";
 
                 String line;
@@ -82,6 +81,15 @@ public abstract class AutoUpdateConfigLoader extends ConfigLoader {
                     else if (line.contains(":")) {
                         line = line.substring(0, line.indexOf(":") + 1);
                         if (!temp.isEmpty()) {
+                            if(comments.containsKey(line)) {
+                                int index = 0;
+                                while(comments.containsKey(line + index)) {
+                                    index++;
+                                }
+                                
+                                line = line + index;
+                            }
+
                             comments.put(line, temp);
                             temp = "";
                         }
@@ -89,9 +97,20 @@ public abstract class AutoUpdateConfigLoader extends ConfigLoader {
                 }
 
                 // Dump to the new one
+                HashMap<String, Integer> indexed = new HashMap<String, Integer>();
                 for (String key : comments.keySet()) {
-                    if (output.contains(key)) {
-                        output = output.substring(0, output.indexOf(key)) + comments.get(key) + output.substring(output.indexOf(key));
+                    String actualkey = key.substring(0, key.indexOf(":") + 1);
+
+                    int index = 0;
+                    if(indexed.containsKey(actualkey)) {
+                        index = indexed.get(actualkey);
+                    }
+                    boolean isAtTop = !output.contains("\n" + actualkey);
+                    index = output.indexOf((isAtTop ? "" : "\n") + actualkey, index);
+
+                    if (index >= 0) {
+                        output = output.substring(0, index) + "\n" + comments.get(key) + output.substring(isAtTop ? index : index + 1);
+                        indexed.put(actualkey, index + comments.get(key).length() + actualkey.length() + 1);
                     }
                 }
             }
@@ -114,14 +133,6 @@ public abstract class AutoUpdateConfigLoader extends ConfigLoader {
             }
             catch (Exception e) {
                 e.printStackTrace();
-            }
-        }
-        else {
-            for (String key : configKeys) {
-                if (!config.isConfigurationSection(key) && !config.get(key).equals(internalConfig.get(key))) {
-                    MetricsManager.customConfig();
-                    break;
-                }
             }
         }
     }

@@ -7,8 +7,42 @@ Key:
   ! Change
   - Removal
 
-Version 1.5.03-dev
+Version 1.5.05-SNAPSHOT
+
+Version 1.5.04
+ + Added option to config.yml to control mcMMO generated sound volume
+ + Added option to config.yml to truncate existing player skill levels that exceed the skill level cap
+ + Falling blocks persist mcMMO natural data
+ = Woodcutting double drops correctly identify acacia and dark oak logs
+ = Skill Reset command now correctly identifies arguments
+ = Hylian Treasure config options are now actually used
+ = Child skills now use parent skills configured skill caps properly
+ = Auto Update config now properly works
+ ! Item dropped from blocks now drop from the center
+ ! Potions Config updated for 1.9
+ ! Flux mining now simulates a block break event for other plugins to act upon
+ ! Zombie Pigmen spawned from nether portals are now considered spawner mobs
+ ! Flux Pickaxe lore now appends to existing lore as opposed to replacing it
+ ! Party chat no longer displays colors when logged in server console
+ - Treefeller no longer lowers exp for big trees
+ - No longer supports 1.8 :(
+ - Removed plugin metrics
+
+Version 1.5.03
+ = Fixed bug where absorption hearts could be attacked by allied players
+ = Fixed bug where new forms of stone would drop the wrong type when mined with Silk Touch
  = Fixed bug where blocks would not get tracked correctly when using sticky pistons and slime blocks in certain situations
+ = Fixed bug where config value for Daze damage was ignored
+ = Fixed UUID updater to not lose data on errors
+ = Fixed bug where uuid update could result in large amounts of user data being deleted
+ = Fixed bug where custom potions were missed in potion stage calculation
+ = Fixed piston dupe bugs permanently
+ = Fixed bug involving user name changes
+ = Fixed old user purge to properly calculate months
+ = Fixed bug where Repair would incorrectly check items
+ = Fixed bug where apostrophes in locale files would not read correctly
+ = Fixed bug where treasure data was limited to 255 instead of Short.MAX_VALUE
+ ! Moved more user loading calculations to async loading thread to reduce lag on login
 
 Version 1.5.02
  + Added option to config.yml for Chimaera Wings to stop using bed spawn points

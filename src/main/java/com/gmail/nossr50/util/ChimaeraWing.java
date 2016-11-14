@@ -17,8 +17,8 @@ import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.config.Config;
 import com.gmail.nossr50.datatypes.player.McMMOPlayer;
 import com.gmail.nossr50.locale.LocaleLoader;
-import com.gmail.nossr50.metrics.MetricsManager;
 import com.gmail.nossr50.runnables.items.ChimaeraWingWarmup;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.CombatUtils;
 import com.gmail.nossr50.util.skills.SkillUtils;
@@ -39,7 +39,7 @@ public final class ChimaeraWing {
             return;
         }
 
-        ItemStack inHand = player.getItemInHand();
+        ItemStack inHand = player.getInventory().getItemInMainHand();
 
         if (!ItemUtils.isChimaeraWing(inHand)) {
             return;
@@ -91,7 +91,7 @@ public final class ChimaeraWing {
 
         if (Config.getInstance().getChimaeraPreventUseUnderground()) {
             if (location.getY() < player.getWorld().getHighestBlockYAt(location)) {
-                player.setItemInHand(new ItemStack(getChimaeraWing(amount - Config.getInstance().getChimaeraUseCost())));
+                player.getInventory().setItemInMainHand(new ItemStack(getChimaeraWing(amount - Config.getInstance().getChimaeraUseCost())));
                 player.sendMessage(LocaleLoader.getString("Item.ChimaeraWing.Fail"));
                 player.updateInventory();
                 player.setVelocity(new Vector(0, 0.5D, 0));
@@ -130,17 +130,13 @@ public final class ChimaeraWing {
             }
         }
 
-        player.setItemInHand(new ItemStack(getChimaeraWing(player.getItemInHand().getAmount() - Config.getInstance().getChimaeraUseCost())));
+        player.getInventory().setItemInMainHand(new ItemStack(getChimaeraWing(player.getInventory().getItemInMainHand().getAmount() - Config.getInstance().getChimaeraUseCost())));
         player.updateInventory();
         mcMMOPlayer.actualizeChimeraWingLastUse();
         mcMMOPlayer.setTeleportCommenceLocation(null);
 
-        if (Config.getInstance().getStatsTrackingEnabled()) {
-            MetricsManager.chimeraWingUsed();
-        }
-
         if (Config.getInstance().getChimaeraSoundEnabled()) {
-            player.playSound(location, Sound.BAT_TAKEOFF, Misc.BAT_VOLUME, Misc.BAT_PITCH);
+            player.playSound(location, SoundAdapter.BAT_TAKEOFF, Misc.BAT_VOLUME, Misc.BAT_PITCH);
         }
 
         player.sendMessage(LocaleLoader.getString("Item.ChimaeraWing.Pass"));

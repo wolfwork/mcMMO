@@ -31,6 +31,7 @@ import com.gmail.nossr50.skills.SkillManager;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.StringUtils;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.ParticleEffectUtils;
 import com.gmail.nossr50.util.skills.SkillUtils;
@@ -256,7 +257,7 @@ public class TamingManager extends SkillManager {
     private void callOfTheWild(EntityType type, int summonAmount) {
         Player player = getPlayer();
 
-        ItemStack heldItem = player.getItemInHand();
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
         int heldItemAmount = heldItem.getAmount();
         Location location = player.getLocation();
 
@@ -325,7 +326,7 @@ public class TamingManager extends SkillManager {
             ParticleEffectUtils.playCallOfTheWildEffect(entity);
         }
 
-        player.setItemInHand(heldItemAmount == summonAmount ? null : new ItemStack(heldItem.getType(), heldItemAmount - summonAmount));
+        player.getInventory().setItemInMainHand(heldItemAmount == summonAmount ? null : new ItemStack(heldItem.getType(), heldItemAmount - summonAmount));
 
         String lifeSpan = "";
         if (tamingCOTWLength > 0) {
@@ -333,7 +334,7 @@ public class TamingManager extends SkillManager {
         }
 
         player.sendMessage(LocaleLoader.getString("Taming.Summon.Complete") + lifeSpan);
-        player.playSound(location, Sound.FIREWORK_LARGE_BLAST2, 1F, 0.5F);
+        player.playSound(location, SoundAdapter.FIREWORK_BLAST_FAR, 1F, 0.5F);
     }
 
     private boolean rangeCheck(EntityType type) {

@@ -51,7 +51,7 @@ public class Mining {
 
             case GLOWING_REDSTONE_ORE:
                 if (Config.getInstance().getDoubleDropsEnabled(SkillType.MINING, Material.REDSTONE_ORE)) {
-                    Misc.dropItem(blockState.getLocation(), new ItemStack(Material.REDSTONE_ORE));
+                    Misc.dropItem(Misc.getBlockCenter(blockState), new ItemStack(Material.REDSTONE_ORE));
                 }
                 return;
 
@@ -64,12 +64,13 @@ public class Mining {
             case QUARTZ_ORE:
             case REDSTONE_ORE:
             case STONE:
-                Misc.dropItem(blockState.getLocation(), new ItemStack(blockType));
+            case PRISMARINE:
+                Misc.dropItem(Misc.getBlockCenter(blockState), blockState.getData().toItemStack(1));
                 return;
 
             default:
                 if (mcMMO.getModManager().isCustomMiningBlock(blockState)) {
-                    Misc.dropItem(blockState.getLocation(), blockState.getData().toItemStack(1));
+                    Misc.dropItem(Misc.getBlockCenter(blockState), blockState.getData().toItemStack(1));
                 }
                 return;
         }
@@ -100,18 +101,18 @@ public class Mining {
             case STAINED_CLAY:
             case STONE:
             case QUARTZ_ORE:
-                Misc.dropItems(blockState.getLocation(), blockState.getBlock().getDrops());
+                Misc.dropItems(Misc.getBlockCenter(blockState), blockState.getBlock().getDrops());
                 return;
 
             case GLOWING_REDSTONE_ORE:
                 if (Config.getInstance().getDoubleDropsEnabled(SkillType.MINING, Material.REDSTONE_ORE)) {
-                    Misc.dropItems(blockState.getLocation(), blockState.getBlock().getDrops());
+                    Misc.dropItems(Misc.getBlockCenter(blockState), blockState.getBlock().getDrops());
                 }
                 return;
 
             default:
                 if (mcMMO.getModManager().isCustomMiningBlock(blockState)) {
-                    Misc.dropItems(blockState.getLocation(), blockState.getBlock().getDrops());
+                    Misc.dropItems(Misc.getBlockCenter(blockState), blockState.getBlock().getDrops());
                 }
                 return;
         }

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.bukkit.CropState;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NetherWartsState;
 import org.bukkit.block.BlockState;
@@ -49,15 +50,17 @@ public class HerbalismManager extends SkillManager {
 
     public boolean canGreenThumbBlock(BlockState blockState) {
         Player player = getPlayer();
-
-        return player.getItemInHand().getType() == Material.SEEDS && BlockUtils.canMakeMossy(blockState) && Permissions.greenThumbBlock(player, blockState.getType());
+        ItemStack item = player.getInventory().getItemInMainHand();
+        
+        return item.getAmount() > 0 && item.getType() == Material.SEEDS && BlockUtils.canMakeMossy(blockState) && Permissions.greenThumbBlock(player, blockState.getType());
     }
 
     public boolean canUseShroomThumb(BlockState blockState) {
         Player player = getPlayer();
-        Material itemType = player.getItemInHand().getType();
+        PlayerInventory inventory = player.getInventory();
+        Material itemType = inventory.getItemInMainHand().getType();
 
-        return (itemType == Material.RED_MUSHROOM || itemType == Material.BROWN_MUSHROOM) && BlockUtils.canMakeShroomy(blockState) && Permissions.secondaryAbilityEnabled(player, SecondaryAbility.SHROOM_THUMB);
+        return (itemType == Material.BROWN_MUSHROOM || itemType == Material.RED_MUSHROOM) && inventory.contains(Material.BROWN_MUSHROOM, 1) && inventory.contains(Material.RED_MUSHROOM, 1) && BlockUtils.canMakeShroomy(blockState) && Permissions.secondaryAbilityEnabled(player, SecondaryAbility.SHROOM_THUMB);
     }
 
     public boolean canUseHylianLuck() {
@@ -120,12 +123,12 @@ public class HerbalismManager extends SkillManager {
     public void herbalismBlockCheck(BlockState blockState) {
         Player player = getPlayer();
         Material material = blockState.getType();
-        boolean oneBlockPlant = !(material == Material.CACTUS || material == Material.SUGAR_CANE_BLOCK);
+        boolean oneBlockPlant = !(material == Material.CACTUS || material == Material.CHORUS_PLANT || material == Material.SUGAR_CANE_BLOCK);
 
         if (oneBlockPlant && mcMMO.getPlaceStore().isTrue(blockState)) {
             return;
         }
-
+        
         if (!canBlockCheck()) {
             return;
         }
@@ -152,6 +155,10 @@ public class HerbalismManager extends SkillManager {
                 xp = ExperienceConfig.getInstance().getFlowerAndGrassXp(blockState.getData());
             }
             else {
+                if(material == Material.CHORUS_FLOWER && blockState.getRawData() != 5) {
+                    return;
+                }
+                
                 xp = ExperienceConfig.getInstance().getXp(skill, material);
             }
 
@@ -160,7 +167,7 @@ public class HerbalismManager extends SkillManager {
             }
 
             if (!oneBlockPlant) {
-                amount = Herbalism.calculateCatciAndSugarDrops(blockState);
+                amount = Herbalism.calculateMultiBlockPlantDrops(blockState);
                 xp *= amount;
             }
         }
@@ -174,7 +181,7 @@ public class HerbalismManager extends SkillManager {
         for (int i = greenTerra ? 2 : 1; i != 0; i--) {
             if (SkillUtils.activationSuccessful(SecondaryAbility.HERBALISM_DOUBLE_DROPS, getPlayer(), getSkillLevel(), activationChance)) {
                 for (ItemStack item : drops) {
-                    Misc.dropItems(blockState.getLocation(), item, amount);
+                    Misc.dropItems(Misc.getBlockCenter(blockState), item, amount);
                 }
             }
         }
@@ -235,15 +242,24 @@ public class HerbalismManager extends SkillManager {
 
         Player player = getPlayer();
 
-        if (treasures.isEmpty() || !EventUtils.simulateBlockBreak(blockState.getBlock(), player, false)) {
+        if (treasures.isEmpty()) {
             return false;
         }
+        int skillLevel = getSkillLevel();
+        Location location = Misc.getBlockCenter(blockState);
 
-        blockState.setType(Material.AIR);
-
-        Misc.dropItem(blockState.getLocation(), treasures.get(Misc.getRandom().nextInt(treasures.size())).getDrop());
-        player.sendMessage(LocaleLoader.getString("Herbalism.HylianLuck"));
-        return true;
+        for (HylianTreasure treasure : treasures) {
+            if (skillLevel >= treasure.getDropLevel() && SkillUtils.treasureDropSuccessful(getPlayer(), treasure.getDropChance(), activationChance)) {
+                if (!EventUtils.simulateBlockBreak(blockState.getBlock(), player, false)) {
+                    return false;
+                }
+                blockState.setType(Material.AIR);
+                Misc.dropItem(location, treasure.getDrop());
+                player.sendMessage(LocaleLoader.getString("Herbalism.HylianLuck"));
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -255,13 +271,13 @@ public class HerbalismManager extends SkillManager {
     public boolean processShroomThumb(BlockState blockState) {
         Player player = getPlayer();
         PlayerInventory playerInventory = player.getInventory();
-
-        if (!playerInventory.contains(Material.BROWN_MUSHROOM)) {
+        
+        if (!playerInventory.contains(Material.BROWN_MUSHROOM, 1)) {
             player.sendMessage(LocaleLoader.getString("Skills.NeedMore", StringUtils.getPrettyItemString(Material.BROWN_MUSHROOM)));
             return false;
         }
 
-        if (!playerInventory.contains(Material.RED_MUSHROOM)) {
+        if (!playerInventory.contains(Material.RED_MUSHROOM, 1)) {
             player.sendMessage(LocaleLoader.getString("Skills.NeedMore", StringUtils.getPrettyItemString(Material.RED_MUSHROOM)));
             return false;
         }
@@ -287,30 +303,34 @@ public class HerbalismManager extends SkillManager {
     private void processGreenThumbPlants(BlockState blockState, boolean greenTerra) {
         Player player = getPlayer();
         PlayerInventory playerInventory = player.getInventory();
-        ItemStack seed = null;
+        Material seed = null;
 
         switch (blockState.getType()) {
             case CARROT:
-                seed = new ItemStack(Material.CARROT_ITEM);
+                seed = Material.CARROT_ITEM;
                 break;
 
             case CROPS:
-                seed = new ItemStack(Material.SEEDS);
+                seed = Material.SEEDS;
                 break;
 
             case NETHER_WARTS:
-                seed = new ItemStack(Material.NETHER_STALK);
+                seed = Material.NETHER_STALK;
                 break;
 
             case POTATO:
-                seed = new ItemStack(Material.POTATO_ITEM);
+                seed = Material.POTATO_ITEM;
+                break;
+
+            case BEETROOT_BLOCK:
+                seed = Material.BEETROOT_SEEDS;
                 break;
 
             default:
-                break;
+                return;
         }
 
-        if (!playerInventory.containsAtLeast(seed, 1)) {
+        if (!playerInventory.contains(seed, 1)) {
             return;
         }
 
@@ -322,7 +342,7 @@ public class HerbalismManager extends SkillManager {
             return;
         }
 
-        playerInventory.removeItem(seed);
+        playerInventory.removeItem(new ItemStack(seed));
         player.updateInventory(); // Needed until replacement available
         new HerbalismBlockUpdaterTask(blockState).runTaskLater(mcMMO.p, 0);
     }
@@ -333,6 +353,10 @@ public class HerbalismManager extends SkillManager {
         blockState.setMetadata(mcMMO.greenThumbDataKey, new FixedMetadataValue(mcMMO.p, (int) (System.currentTimeMillis() / Misc.TIME_CONVERSION_FACTOR)));
 
         switch (blockState.getType()) {
+
+            case POTATO:
+            case CARROT:
+            case BEETROOT_BLOCK:
             case CROPS:
                 Crops crops = (Crops) blockState.getData();
 
@@ -354,17 +378,6 @@ public class HerbalismManager extends SkillManager {
                             crops.setState(CropState.SEEDED);
                             break;
                     }
-                }
-
-                return true;
-
-            case CARROT:
-            case POTATO:
-                if (greenTerra) {
-                    blockState.setRawData(CropState.MEDIUM.getData());
-                }
-                else {
-                    blockState.setRawData(greenThumbStage);
                 }
 
                 return true;

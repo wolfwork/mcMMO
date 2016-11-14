@@ -53,6 +53,7 @@ import com.gmail.nossr50.util.EventUtils;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.StringUtils;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.skills.ParticleEffectUtils;
 import com.gmail.nossr50.util.skills.PerksUtils;
 import com.gmail.nossr50.util.skills.SkillUtils;
@@ -101,12 +102,6 @@ public class McMMOPlayer {
         this.player = player;
         playerMetadata = new FixedMetadataValue(mcMMO.p, playerName);
         this.profile = profile;
-        party = PartyManager.getPlayerParty(playerName, uuid);
-        ptpRecord = new PartyTeleportRecord();
-
-        if (inParty()) {
-            loginParty();
-        }
 
         if (profile.getUniqueId() == null) {
             profile.setUniqueId(uuid);
@@ -510,7 +505,7 @@ public class McMMOPlayer {
         }
 
         if (Config.getInstance().getLevelUpSoundsEnabled()) {
-            player.playSound(player.getLocation(), Sound.LEVEL_UP, Misc.LEVELUP_VOLUME, Misc.LEVELUP_PITCH);
+            player.playSound(player.getLocation(), SoundAdapter.LEVEL_UP, Misc.LEVELUP_VOLUME, Misc.LEVELUP_PITCH);
         }
 
         player.sendMessage(LocaleLoader.getString(StringUtils.getCapitalized(skillType.toString()) + ".Skillup", levelsGained, getSkillLevel(skillType)));
@@ -531,6 +526,15 @@ public class McMMOPlayer {
     /*
      * Party Stuff
      */
+
+    public void setupPartyData() {
+        party = PartyManager.getPlayerParty(player.getName(), player.getUniqueId());
+        ptpRecord = new PartyTeleportRecord();
+
+        if (inParty()) {
+            loginParty();
+        }
+    }
 
     public void setPartyInvite(Party invite) {
         this.invite = invite;
@@ -686,7 +690,7 @@ public class McMMOPlayer {
         xp = (float) (xp / skillType.getXpModifier() * ExperienceConfig.getInstance().getExperienceGainsGlobalMultiplier());
 
         if (Config.getInstance().getToolModsEnabled()) {
-            CustomTool tool = mcMMO.getModManager().getTool(player.getItemInHand());
+            CustomTool tool = mcMMO.getModManager().getTool(player.getInventory().getItemInMainHand());
 
             if (tool != null) {
                 xp *= tool.getXpMultiplier();
@@ -770,7 +774,7 @@ public class McMMOPlayer {
             return;
         }
 
-        ItemStack inHand = player.getItemInHand();
+        ItemStack inHand = player.getInventory().getItemInMainHand();
 
         if (mcMMO.getModManager().isCustomTool(inHand) && !mcMMO.getModManager().getTool(inHand).isAbilityEnabled()) {
             return;

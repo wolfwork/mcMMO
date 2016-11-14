@@ -451,6 +451,8 @@ public class Config extends AutoUpdateConfigLoader {
     public boolean getDoubleDropsDisabled(SkillType skill) {
         String skillName = StringUtils.getCapitalized(skill.toString());
         ConfigurationSection section = config.getConfigurationSection("Double_Drops." + skillName);
+        if (section == null)
+            return false;
         Set<String> keys = section.getKeys(false);
         boolean disabled = true;
 
@@ -528,7 +530,11 @@ public class Config extends AutoUpdateConfigLoader {
         return (cap <= 0) ? Integer.MAX_VALUE : cap;
     }
 
+    public boolean getTruncateSkills() { return config.getBoolean("General.TruncateSkills", false); }
+
     /* PVP & PVE Settings */
     public boolean getPVPEnabled(SkillType skill) { return config.getBoolean("Skills." + StringUtils.getCapitalized(skill.toString()) + ".Enabled_For_PVP", true); }
     public boolean getPVEEnabled(SkillType skill) { return config.getBoolean("Skills." + StringUtils.getCapitalized(skill.toString()) + ".Enabled_For_PVE", true); }
+    
+    public float getMasterVolume() { return (float) config.getDouble("Sounds.MasterVolume", 1.0); }
 }

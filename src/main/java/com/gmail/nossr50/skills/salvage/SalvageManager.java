@@ -23,6 +23,7 @@ import com.gmail.nossr50.skills.salvage.salvageables.Salvageable;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.StringUtils;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.skills.SkillUtils;
 
 public class SalvageManager extends SkillManager {
@@ -48,7 +49,7 @@ public class SalvageManager extends SkillManager {
         }
 
         if (Config.getInstance().getSalvageAnvilPlaceSoundsEnabled()) {
-            player.playSound(player.getLocation(), Sound.ANVIL_LAND, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
+            player.playSound(player.getLocation(), SoundAdapter.ANVIL_LAND, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
         }
 
         togglePlacedAnvil();
@@ -93,8 +94,8 @@ public class SalvageManager extends SkillManager {
 
         salvageableAmount = Math.max((int) (salvageableAmount * getMaxSalvagePercentage()), 1); // Always get at least something back, if you're capable of salvaging it.
 
-        player.setItemInHand(new ItemStack(Material.AIR));
-        location.add(0, 1, 0);
+        player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+        location.add(0.5, 1, 0.5);
 
         Map<Enchantment, Integer> enchants = item.getEnchantments();
 
@@ -112,8 +113,8 @@ public class SalvageManager extends SkillManager {
 
         // BWONG BWONG BWONG - CLUNK!
         if (Config.getInstance().getSalvageAnvilUseSoundsEnabled()) {
-            player.playSound(player.getLocation(), Sound.ANVIL_USE, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
-            player.playSound(player.getLocation(), Sound.ITEM_BREAK, 1.0F, 1.0F);
+            player.playSound(player.getLocation(), SoundAdapter.ANVIL_USE, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
+            player.playSound(player.getLocation(), SoundAdapter.ITEM_BREAK, 1.0F, 1.0F);
         }
 
         player.sendMessage(LocaleLoader.getString("Salvage.Skills.Success"));

@@ -26,6 +26,7 @@ import com.gmail.nossr50.util.EventUtils;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.StringUtils;
+import com.gmail.nossr50.util.adapter.SoundAdapter;
 import com.gmail.nossr50.util.skills.SkillUtils;
 
 public class RepairManager extends SkillManager {
@@ -51,7 +52,7 @@ public class RepairManager extends SkillManager {
         }
 
         if (Config.getInstance().getRepairAnvilPlaceSoundsEnabled()) {
-            player.playSound(player.getLocation(), Sound.ANVIL_LAND, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
+            player.playSound(player.getLocation(), SoundAdapter.ANVIL_LAND, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
         }
 
         togglePlacedAnvil();
@@ -67,7 +68,7 @@ public class RepairManager extends SkillManager {
             return;
         }
 
-        if (!Permissions.repairMaterialType(player, repairable.getRepairMaterialType())) {
+        if (!Permissions.repairItemType(player, repairable.getRepairItemType())) {
             player.sendMessage(LocaleLoader.getString("mcMMO.NoPermission"));
             return;
         }
@@ -145,7 +146,7 @@ public class RepairManager extends SkillManager {
 
         // BWONG BWONG BWONG
         if (Config.getInstance().getRepairAnvilUseSoundsEnabled()) {
-            player.playSound(player.getLocation(), Sound.ANVIL_USE, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
+            player.playSound(player.getLocation(), SoundAdapter.ANVIL_USE, Misc.ANVIL_USE_VOLUME, Misc.ANVIL_USE_PITCH);
         }
 
         // Repair the item!
